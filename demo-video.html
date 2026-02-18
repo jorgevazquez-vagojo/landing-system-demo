@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landing System — Demo Completa (14 min)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ===================================================================
+   TOKENS
+   =================================================================== */
+:root {
+  --primary: #2563eb;
+  --primary-light: #3b82f6;
+  --primary-dark: #1d4ed8;
+  --primary-50: rgba(37,99,235,.06);
+  --accent: #7c3aed;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --sidebar: #0f172a;
+  --bg: #f1f5f9;
+  --card: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --bank-dark: #0C2340;
+  --bank-gold: #C5A572;
+  --bank-light: #F5F0E8;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.08);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.1);
+  --shadow-xl: 0 20px 50px rgba(0,0,0,.15);
+  --radius: 12px;
+  --radius-lg: 16px;
+  --ease: cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#000;color:#fff;overflow:hidden;height:100vh;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(37,99,235,.3)}
+
+/* ===================================================================
+   PRESENTATION FRAME
+   =================================================================== */
+#presentation{position:relative;width:100vw;height:100vh;overflow:hidden}
+
+/* Progress bar */
+#progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));z-index:1000;transition:width .3s linear}
+
+/* Controls — mini floating pill, bottom-right, unobtrusive */
+#controls{
+  position:fixed;bottom:16px;right:16px;z-index:999;
+  display:flex;align-items:center;gap:8px;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.08);border-radius:28px;
+  padding:6px 14px;
+  opacity:.4;transition:opacity .3s;
+}
+#controls:hover,#controls.force-show{opacity:1}
+.ctrl-btn{background:transparent;border:none;color:rgba(255,255,255,.7);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.ctrl-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.ctrl-btn.active{color:var(--primary-light)}
+#time-display{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);font-variant-numeric:tabular-nums;min-width:85px}
+#scene-counter{font-size:10px;color:rgba(255,255,255,.35);font-weight:600}
+.progress-track{width:80px;height:3px;background:rgba(255,255,255,.12);border-radius:2px;cursor:pointer;position:relative}
+.progress-fill{height:100%;background:var(--primary);border-radius:2px;transition:width .3s linear}
+
+/* ===================================================================
+   SLIDES
+   =================================================================== */
+.slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(.97);transition:all .6s var(--ease);pointer-events:none;padding:40px}
+.slide.active{opacity:1;transform:scale(1);pointer-events:auto}
+.slide.exit{opacity:0;transform:scale(1.02)}
+
+/* Slide layouts */
+.slide-title{flex-direction:column;text-align:center}
+.slide-split{display:flex;gap:40px;align-items:center}
+.slide-full{flex-direction:column;padding:60px}
+
+/* ===================================================================
+   TITLE SLIDES
+   =================================================================== */
+.hero-badge{display:inline-block;background:rgba(37,99,235,.15);color:var(--primary-light);padding:6px 18px;border-radius:20px;font-size:13px;font-weight:600;margin-bottom:20px;letter-spacing:.5px}
+.hero-title{font-size:52px;font-weight:900;letter-spacing:-.03em;line-height:1.1;margin-bottom:16px;background:linear-gradient(135deg,#fff 0%,rgba(255,255,255,.7) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-subtitle{font-size:20px;color:rgba(255,255,255,.5);font-weight:400;max-width:600px;line-height:1.5}
+.hero-icon{font-size:80px;margin-bottom:24px}
+
+/* ===================================================================
+   MOCKUP FRAME
+   =================================================================== */
+.mockup-browser{background:var(--sidebar);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-xl);max-width:900px;width:100%}
+.mockup-titlebar{height:36px;background:#1e293b;display:flex;align-items:center;padding:0 14px;gap:8px}
+.mockup-dot{width:10px;height:10px;border-radius:50%}
+.mockup-url{flex:1;text-align:center;font-size:11px;color:rgba(255,255,255,.3);font-family:'SF Mono',Menlo,monospace}
+.mockup-body{background:var(--bg);min-height:380px;max-height:480px;overflow:hidden;position:relative}
+
+/* Small mockup */
+.mockup-sm{max-width:700px}
+.mockup-sm .mockup-body{min-height:300px;max-height:400px}
+
+/* ===================================================================
+   MOCKUP INNER LAYOUTS
+   =================================================================== */
+.mock-sidebar{width:180px;background:var(--sidebar);display:flex;flex-direction:column;flex-shrink:0;position:absolute;top:0;bottom:0;left:0}
+.mock-sidebar .brand{padding:12px;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;gap:6px}
+.mock-nav-item{padding:7px 12px;font-size:10px;color:#94a3b8;display:flex;align-items:center;gap:6px;margin:1px 6px;border-radius:6px;cursor:default}
+.mock-nav-item.active{background:rgba(37,99,235,.15);color:var(--primary-light)}
+.mock-main{margin-left:180px;padding:14px;overflow:hidden}
+.mock-topbar{background:#fff;border-bottom:1px solid var(--border);padding:10px 14px;font-size:11px;font-weight:700;color:var(--text);margin:-14px -14px 14px;display:flex;justify-content:space-between;align-items:center}
+.mock-topbar .right{display:flex;align-items:center;gap:8px}
+.mock-avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:8px;color:#fff;font-weight:700}
+
+/* Stat cards */
+.mock-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.mock-stat{background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px}
+.mock-stat .label{font-size:8px;color:var(--muted)}
+.mock-stat .val{font-size:16px;font-weight:800;color:var(--text)}
+.mock-stat .change{font-size:8px;color:var(--success)}
+
+/* Landing cards */
+.mock-landing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mock-landing-card{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.mock-landing-thumb{height:60px;padding:8px;color:#fff;font-size:10px;font-weight:700}
+.mock-landing-info{padding:8px}
+.mock-landing-info h4{font-size:10px;font-weight:700;color:var(--text);margin-bottom:2px}
+.mock-landing-info .slug{font-size:8px;color:var(--muted);font-family:monospace}
+.mock-btn{display:inline-block;padding:3px 8px;border-radius:4px;font-size:8px;font-weight:600;background:var(--primary);color:#fff;margin-top:4px;margin-right:3px}
+.mock-btn.outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+
+/* Editor layout */
+.mock-editor-toolbar{height:32px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:9px}
+.mock-editor-body{display:flex;height:calc(100% - 32px);position:absolute;inset:32px 0 0 0}
+.mock-palette{width:140px;background:#fff;border-right:1px solid var(--border);padding:8px;overflow:hidden}
+.mock-palette-title{font-size:7px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.mock-palette-item{font-size:9px;color:var(--muted);padding:4px 6px;border-radius:4px;margin-bottom:1px;display:flex;align-items:center;gap:4px;cursor:default}
+.mock-palette-item:hover{background:var(--bg)}
+.mock-canvas{flex:1;background:#e2e8f0;padding:10px;display:flex;justify-content:center;overflow:hidden}
+.mock-canvas-frame{background:#fff;width:100%;max-width:500px;box-shadow:var(--shadow-md);border-radius:6px;overflow:hidden;font-size:9px}
+.mock-props{width:170px;background:#fff;border-left:1px solid var(--border);padding:8px;overflow:hidden}
+.mock-props-title{font-size:7px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.mock-props-field{margin-bottom:6px}
+.mock-props-label{font-size:8px;color:var(--muted);margin-bottom:2px}
+.mock-props-input{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:8px;font-family:inherit;background:var(--bg)}
+
+/* Bank landing mini */
+.mini-bank-nav{background:var(--bank-dark);color:#fff;padding:6px 12px;font-size:8px;display:flex;justify-content:space-between;font-weight:600}
+.mini-bank-hero{background:linear-gradient(135deg,var(--bank-dark),#1a3a5c);color:#fff;padding:20px 16px;text-align:center}
+.mini-bank-hero h3{font-size:14px;font-weight:800;margin-bottom:4px}
+.mini-bank-hero .rate{font-size:10px;color:var(--bank-gold);margin-bottom:8px}
+.mini-bank-hero .cta{display:inline-block;background:var(--bank-gold);color:var(--bank-dark);padding:4px 16px;border-radius:4px;font-size:9px;font-weight:700}
+.mini-bank-stats{display:grid;grid-template-columns:repeat(4,1fr);background:#fff;border-bottom:1px solid var(--border)}
+.mini-bank-stats>div{text-align:center;padding:8px;border-right:1px solid var(--border);font-size:8px}
+.mini-bank-stats>div:last-child{border:none}
+.mini-bank-stats .n{font-size:12px;font-weight:800;color:var(--bank-dark)}
+.mini-bank-features{padding:12px 16px;background:#fff}
+.mini-bank-features h4{text-align:center;font-size:10px;margin-bottom:8px;color:var(--bank-dark)}
+.mini-feat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;font-size:7px;color:var(--muted)}
+.mini-feat-icon{width:24px;height:24px;border-radius:6px;background:var(--bank-light);color:var(--bank-gold);display:flex;align-items:center;justify-content:center;margin:0 auto 3px;font-size:12px}
+
+/* Table mini */
+.mock-table{width:100%;font-size:9px;border-collapse:collapse}
+.mock-table th{text-align:left;padding:6px 8px;background:var(--bg);color:var(--muted);font-weight:600;font-size:8px;border-bottom:1px solid var(--border)}
+.mock-table td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text)}
+.mock-table tr:last-child td{border:none}
+.mock-badge{display:inline-block;padding:1px 6px;border-radius:8px;font-size:7px;font-weight:700}
+
+/* AB testing */
+.mock-ab-variants{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.mock-ab-var{border:1px solid var(--border);border-radius:8px;padding:8px;font-size:9px}
+.mock-ab-var.winner{border-color:var(--success);background:rgba(16,185,129,.04)}
+.mock-ab-metric{display:flex;justify-content:space-between;padding:2px 0;font-size:8px}
+
+/* Heatmap */
+.mock-heatmap{position:relative;height:200px;background:linear-gradient(180deg,var(--bank-dark) 0%,var(--bank-dark) 15%,#fff 15%);border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.heat-dot{position:absolute;border-radius:50%;animation:hpulse 2s ease-in-out infinite}
+@keyframes hpulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:.8;transform:scale(1.1)}}
+.mock-scroll-depth{display:flex;height:200px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.mock-scroll-band{flex:1;display:flex;align-items:flex-end;justify-content:center;font-size:10px;font-weight:700;color:#fff;padding-bottom:6px}
+
+/* A11y */
+.mock-a11y-score{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;margin:0 auto 8px;background:rgba(16,185,129,.1);color:var(--success)}
+.mock-a11y-issue{display:flex;gap:8px;padding:8px;border-bottom:1px solid var(--border);font-size:9px}
+.mock-issue-dot{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0}
+
+/* AI Panel */
+.mock-ai-panel{background:linear-gradient(135deg,rgba(124,58,237,.05),rgba(37,99,235,.05));border:1px solid rgba(124,58,237,.2);border-radius:8px;padding:10px;margin-top:6px}
+.mock-ai-prompt{background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px;font-size:9px;color:var(--muted);margin-bottom:6px}
+.mock-ai-output{background:rgba(124,58,237,.04);border-radius:6px;padding:8px;font-size:9px;color:var(--text);line-height:1.5}
+.mock-ai-tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:7px;font-weight:700;background:rgba(124,58,237,.1);color:var(--accent);margin-bottom:4px}
+
+/* DTR */
+.mock-dtr-url{background:#1e293b;color:#10b981;padding:8px 12px;border-radius:6px;font-family:'SF Mono',Menlo,monospace;font-size:10px;margin-bottom:8px;overflow:hidden}
+.mock-dtr-url .param{color:#f59e0b}
+.mock-dtr-before,.mock-dtr-after{border:1px solid var(--border);border-radius:8px;padding:10px;background:#fff;font-size:10px}
+.mock-dtr-after{border-color:var(--success);background:rgba(16,185,129,.03)}
+.mock-dtr-highlight{background:rgba(245,158,11,.15);padding:1px 4px;border-radius:3px;font-weight:700}
+
+/* Popup mockup */
+.mock-popup-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:5}
+.mock-popup-box{background:#fff;border-radius:12px;padding:16px;text-align:center;box-shadow:var(--shadow-xl);max-width:200px}
+.mock-popup-box h5{font-size:11px;font-weight:800;color:var(--bank-dark);margin-bottom:4px}
+.mock-popup-box p{font-size:8px;color:var(--muted);margin-bottom:6px;line-height:1.4}
+.mock-popup-cta{display:inline-block;background:var(--bank-gold);color:var(--bank-dark);padding:4px 12px;border-radius:4px;font-size:8px;font-weight:700}
+
+/* SEO/LLM */
+.mock-code{background:#1e293b;border-radius:8px;padding:10px 14px;font-family:'SF Mono',Menlo,monospace;font-size:9px;line-height:1.6;overflow:hidden}
+.mock-code .key{color:#7dd3fc}
+.mock-code .str{color:#86efac}
+.mock-code .com{color:#64748b}
+.mock-code .tag{color:#c084fc}
+
+/* Pricing */
+.mock-pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:700px}
+.mock-plan{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-lg);padding:20px;text-align:center}
+.mock-plan.featured{background:rgba(37,99,235,.1);border-color:var(--primary);position:relative}
+.mock-plan.featured::before{content:'POPULAR';position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--primary);color:#fff;padding:2px 12px;border-radius:10px;font-size:9px;font-weight:700}
+.mock-plan h4{font-size:16px;font-weight:700;margin-bottom:4px}
+.mock-plan .price{font-size:28px;font-weight:900;margin:8px 0}
+.mock-plan .price span{font-size:13px;font-weight:400;color:rgba(255,255,255,.5)}
+.mock-plan ul{list-style:none;text-align:left;font-size:11px;line-height:2;color:rgba(255,255,255,.7);margin-top:12px}
+.mock-plan ul li::before{content:'✓ ';color:var(--success)}
+
+/* Narration subtitles — bottom-left, compact */
+.narration-box{
+  position:fixed;bottom:16px;left:16px;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.06);border-radius:10px;
+  padding:10px 16px;max-width:480px;
+  font-size:12px;color:rgba(255,255,255,.7);line-height:1.5;
+  z-index:998;opacity:0;transition:opacity .4s;pointer-events:none;
+}
+.narration-box.show{opacity:.85}
+
+/* Chapter indicator — top center, very subtle */
+.chapter-label{position:fixed;top:12px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:600;color:rgba(255,255,255,.2);text-transform:uppercase;letter-spacing:2px;z-index:997;transition:opacity .3s}
+.chapter-label:empty{opacity:0}
+
+/* Keyframe animations for elements */
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(37,99,235,.2)}50%{box-shadow:0 0 40px rgba(37,99,235,.4)}}
+.anim-up{animation:slideUp .6s var(--ease) forwards}
+.anim-left{animation:slideLeft .6s var(--ease) forwards}
+.anim-delay-1{animation-delay:.15s;opacity:0}
+.anim-delay-2{animation-delay:.3s;opacity:0}
+.anim-delay-3{animation-delay:.45s;opacity:0}
+.anim-delay-4{animation-delay:.6s;opacity:0}
+
+/* Feature list */
+.feature-list{list-style:none;font-size:15px;line-height:2.2;color:rgba(255,255,255,.7)}
+.feature-list li{display:flex;align-items:center;gap:10px}
+.feature-list .icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+
+/* Comparison table */
+.compare-table{border-collapse:collapse;font-size:12px;width:100%;max-width:800px}
+.compare-table th{padding:10px 14px;text-align:left;font-weight:700;border-bottom:2px solid rgba(255,255,255,.15)}
+.compare-table td{padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.06)}
+.compare-table .check{color:var(--success);font-weight:700}
+.compare-table .cross{color:rgba(255,255,255,.2)}
+.compare-table .highlight-col{background:rgba(37,99,235,.08)}
+
+/* Architecture cards */
+.arch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:800px}
+.arch-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:16px;text-align:center}
+.arch-card .icon{font-size:28px;margin-bottom:8px}
+.arch-card h5{font-size:13px;font-weight:700;margin-bottom:4px}
+.arch-card p{font-size:10px;color:rgba(255,255,255,.5);line-height:1.4}
+</style>
+</head>
+<body>
+
+<div id="presentation">
+  <!-- Progress -->
+  <div id="progress-bar" style="width:0%"></div>
+  <div class="chapter-label" id="chapter-label"></div>
+  <div class="narration-box" id="narration-box"></div>
+
+  <!-- ========== SLIDE 0: Title ========== -->
+  <div class="slide slide-title active" data-bg="radial-gradient(ellipse at 30% 50%,rgba(37,99,235,.15),transparent 60%),radial-gradient(ellipse at 70% 80%,rgba(124,58,237,.1),transparent 50%),#0a0a0f">
+    <div>
+      <div class="hero-badge anim-up">Landing System v2.0</div>
+      <div class="hero-title anim-up anim-delay-1">La plataforma de<br>landing pages<br>definitiva</div>
+      <div class="hero-subtitle anim-up anim-delay-2">Demo completa de 14 minutos con un caso real:<br>Banco Nacional Meridian</div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 1: The Problem ========== -->
+  <div class="slide slide-title" data-bg="#0a0a0f">
+    <div>
+      <div class="hero-icon">&#128680;</div>
+      <div class="hero-title" style="font-size:36px">El problema</div>
+      <div class="hero-subtitle" style="font-size:16px;max-width:650px">
+        Unbounce cobra $249/mes. Instapage $299/mes. HubSpot $800/mes.<br>
+        Y ninguno ofrece IA, heatmaps, accesibilidad y A/B testing juntos.<br><br>
+        <strong style="color:#fff">Landing System lo cambia todo.</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 2: Feature overview ========== -->
+  <div class="slide slide-title" data-bg="radial-gradient(ellipse at 50% 50%,rgba(16,185,129,.08),transparent 60%),#0a0a0f">
+    <div>
+      <div class="hero-badge">10 módulos integrados</div>
+      <div class="hero-title" style="font-size:32px;margin-bottom:24px">Todo incluido, sin extras</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 40px;text-align:left;max-width:600px;margin:0 auto">
+        <ul class="feature-list">
+          <li><span class="icon" style="background:rgba(37,99,235,.15);color:var(--primary)">&#9998;</span> Editor drag-and-drop</li>
+          <li><span class="icon" style="background:rgba(124,58,237,.15);color:var(--accent)">&#10024;</span> IA generativa (BYOK)</li>
+          <li><span class="icon" style="background:rgba(16,185,129,.15);color:var(--success)">&#129514;</span> A/B Testing</li>
+          <li><span class="icon" style="background:rgba(239,68,68,.15);color:var(--danger)">&#128293;</span> Heatmaps</li>
+          <li><span class="icon" style="background:rgba(245,158,11,.15);color:var(--warning)">&#127800;</span> Popups inteligentes</li>
+        </ul>
+        <ul class="feature-list">
+          <li><span class="icon" style="background:rgba(37,99,235,.15);color:var(--primary)">&#128270;</span> SEO automático</li>
+          <li><span class="icon" style="background:rgba(124,58,237,.15);color:var(--accent)">&#9855;</span> Accesibilidad WCAG</li>
+          <li><span class="icon" style="background:rgba(16,185,129,.15);color:var(--success)">&#128203;</span> Gestión de leads</li>
+          <li><span class="icon" style="background:rgba(239,68,68,.15);color:var(--danger)">&#128260;</span> DTR dinámico</li>
+          <li><span class="icon" style="background:rgba(245,158,11,.15);color:var(--warning)">&#129302;</span> Navegación LLM</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 3: Login ========== -->
+  <div class="slide" data-bg="#0a0a0f">
+    <div style="text-align:center;width:100%;max-width:400px">
+      <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:2px;margin-bottom:20px">Paso 1 — Acceso al sistema</div>
+      <div style="background:#fff;border-radius:20px;padding:40px;box-shadow:var(--shadow-xl);text-align:center">
+        <div style="font-size:40px;margin-bottom:12px">&#127974;</div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px">Landing System</h2>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:24px">Plataforma de landing pages profesionales</p>
+        <div style="text-align:left;margin-bottom:12px"><label style="font-size:10px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">EMAIL</label><div style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--text);background:var(--bg)">admin@meridian.bank</div></div>
+        <div style="text-align:left;margin-bottom:16px"><label style="font-size:10px;font-weight:600;color:var(--muted);display:block;margin-bottom:4px">CONTRASEÑA</label><div style="padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;color:var(--muted);background:var(--bg)">••••••••</div></div>
+        <div style="background:var(--primary);color:#fff;padding:12px;border-radius:8px;font-weight:600;font-size:14px">Iniciar sesión</div>
+        <p style="font-size:10px;color:var(--muted);margin-top:16px">Demo — Banco Nacional Meridian</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 4: Dashboard ========== -->
+  <div class="slide" data-bg="#0a0a0f">
+    <div class="mockup-browser" style="max-width:950px">
+      <div class="mockup-titlebar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-url">app.landing-system.io/dashboard</div></div>
+      <div class="mockup-body" style="min-height:400px">
+        <div class="mock-sidebar">
+          <div class="brand">&#127974; Banco Meridian</div>
+          <div style="padding:4px 0;font-size:7px;color:#475569;padding:6px 12px 2px;text-transform:uppercase;letter-spacing:.5px">Principal</div>
+          <div class="mock-nav-item active">&#127968; Inicio</div>
+          <div class="mock-nav-item">&#128196; Landings</div>
+          <div class="mock-nav-item">&#128203; Leads</div>
+          <div style="padding:4px 0;font-size:7px;color:#475569;padding:6px 12px 2px;text-transform:uppercase;letter-spacing:.5px">Optimización</div>
+          <div class="mock-nav-item">&#129514; A/B Testing</div>
+          <div class="mock-nav-item">&#128293; Heatmaps</div>
+          <div class="mock-nav-item">&#9855; Accesibilidad</div>
+        </div>
+        <div class="mock-main">
+          <div class="mock-topbar">Inicio<div class="right"><span style="font-size:9px;color:var(--muted)">Carlos Martínez</span><div class="mock-avatar">CM</div></div></div>
+          <div class="mock-stats">
+            <div class="mock-stat"><div class="label">Landings activas</div><div class="val">4</div><div class="change">&#9650; 1 esta semana</div></div>
+            <div class="mock-stat"><div class="val" style="color:var(--primary)">2.847</div><div class="label">Visitantes hoy</div><div class="change">&#9650; 12,3%</div></div>
+            <div class="mock-stat"><div class="val" style="color:var(--success)">156</div><div class="label">Leads este mes</div><div class="change">&#9650; 23 nuevos</div></div>
+            <div class="mock-stat"><div class="val" style="color:var(--accent)">5,48%</div><div class="label">Tasa conversión</div><div class="change">&#9650; 0,3%</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px">
+              <div style="font-size:10px;font-weight:700;margin-bottom:6px;color:var(--text)">Actividad reciente</div>
+              <div style="font-size:8px;color:var(--muted);line-height:2.2">
+                <span style="color:var(--success)">●</span> Nuevo lead: María García — Hipoteca Joven<br>
+                <span style="color:var(--primary)">●</span> Landing Black Friday publicada<br>
+                <span style="color:var(--accent)">●</span> A/B Test Hero — Var. B gana +56%<br>
+                <span style="color:var(--warning)">●</span> Audit accesibilidad: 92/100
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px">
+              <div style="font-size:10px;font-weight:700;margin-bottom:6px;color:var(--text)">Visitantes (semana)</div>
+              <div style="display:flex;align-items:flex-end;gap:4px;height:60px;margin-top:8px">
+                <div style="flex:1;height:45%;background:var(--primary);border-radius:3px 3px 0 0"></div>
+                <div style="flex:1;height:62%;background:var(--primary);border-radius:3px 3px 0 0"></div>
+                <div style="flex:1;height:38%;background:var(--primary);border-radius:3px 3px 0 0"></div>
+                <div style="flex:1;height:72%;background:var(--primary);border-radius:3px 3px 0 0"></div>
+                <div style="flex:1;height:55%;background:var(--primary);border-radius:3px 3px 0 0"></div>
+                <div style="flex:1;height:88%;background:var(--primary);border-radius:3px 3px 0 0"></div>
+                <div style="flex:1;height:95%;background:linear-gradient(180deg,var(--primary-light),var(--primary));border-radius:3px 3px 0 0"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 5: Landings list ========== -->
+  <div class="slide" data-bg="#0a0a0f">
+    <div class="mockup-browser" style="max-width:950px">
+      <div class="mockup-titlebar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-url">app.landing-system.io/dashboard/landings</div></div>
+      <div class="mockup-body" style="min-height:400px">
+        <div class="mock-sidebar">
+          <div class="brand">&#127974; Banco Meridian</div>
+          <div class="mock-nav-item">&#127968; Inicio</div>
+          <div class="mock-nav-item active">&#128196; Landings</div>
+          <div class="mock-nav-item">&#128203; Leads</div>
+          <div class="mock-nav-item">&#129514; A/B Testing</div>
+        </div>
+        <div class="mock-main">
+          <div class="mock-topbar">Mis Landings<div class="right"><div class="mock-btn">+ Nueva Landing</div></div></div>
+          <div class="mock-landing-grid">
+            <div class="mock-landing-card">
+              <div class="mock-landing-thumb" style="background:linear-gradient(135deg,#0C2340,#1a3a5c)">
+                <div style="float:right;background:rgba(16,185,129,.2);color:#34d399;padding:1px 6px;border-radius:8px;font-size:7px;font-weight:700">PUBLICADA</div>
+                Hipoteca Joven
+              </div>
+              <div class="mock-landing-info"><h4>Hipoteca Joven Meridian</h4><div class="slug">/p/hipoteca-joven</div><div style="font-size:8px;color:var(--muted);margin-top:3px">&#128065; 1.234 &bull; &#128203; 67 &bull; &#128200; 5,4%</div><div><span class="mock-btn">Editar</span><span class="mock-btn outline">Vista previa</span></div></div>
+            </div>
+            <div class="mock-landing-card">
+              <div class="mock-landing-thumb" style="background:linear-gradient(135deg,#1a1a2e,#C5A572)">
+                <div style="float:right;background:rgba(16,185,129,.2);color:#34d399;padding:1px 6px;border-radius:8px;font-size:7px;font-weight:700">PUBLICADA</div>
+                Tarjeta Platinum
+              </div>
+              <div class="mock-landing-info"><h4>Tarjeta Platinum Business</h4><div class="slug">/p/tarjeta-platinum</div><div style="font-size:8px;color:var(--muted);margin-top:3px">&#128065; 892 &bull; &#128203; 45 &bull; &#128200; 5,0%</div><div><span class="mock-btn">Editar</span></div></div>
+            </div>
+            <div class="mock-landing-card">
+              <div class="mock-landing-thumb" style="background:linear-gradient(135deg,#0C2340,#2563eb)">
+                <div style="float:right;background:rgba(245,158,11,.2);color:#fbbf24;padding:1px 6px;border-radius:8px;font-size:7px;font-weight:700">BORRADOR</div>
+                Cuenta Empresas
+              </div>
+              <div class="mock-landing-info"><h4>Cuenta Empresas Pro</h4><div class="slug">/p/cuenta-empresas</div><div style="font-size:8px;color:var(--warning);margin-top:3px">&#9888; En edición</div><div><span class="mock-btn">Editar</span></div></div>
+            </div>
+            <div class="mock-landing-card">
+              <div class="mock-landing-thumb" style="background:linear-gradient(135deg,#1f2937,#ef4444)">
+                <div style="float:right;background:rgba(16,185,129,.2);color:#34d399;padding:1px 6px;border-radius:8px;font-size:7px;font-weight:700">PUBLICADA</div>
+                Black Friday
+              </div>
+              <div class="mock-landing-info"><h4>Campaña Black Friday</h4><div class="slug">/p/black-friday-2026</div><div style="font-size:8px;color:var(--muted);margin-top:3px">&#129514; A/B Test activo</div><div><span class="mock-btn">Editar</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 6: Editor ========== -->
+  <div class="slide" data-bg="#0a0a0f">
+    <div class="mockup-browser" style="max-width:1000px">
+      <div class="mockup-titlebar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-url">app.landing-system.io/editor/hipoteca-joven</div></div>
+      <div class="mockup-body" style="min-height:420px">
+        <div class="mock-editor-toolbar">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:9px;background:rgba(255,255,255,.05);padding:2px 6px;border-radius:4px;border:1px solid var(--border)">&#8592; Volver</span><span style="font-weight:700;color:var(--text)">Hipoteca Joven Meridian</span><span style="width:6px;height:6px;background:var(--warning);border-radius:50%;display:inline-block"></span></div>
+          <div style="display:flex;gap:3px"><span style="background:var(--primary);color:#fff;padding:2px 8px;border-radius:4px;font-size:8px;font-weight:600">Escritorio</span><span style="padding:2px 8px;font-size:8px;color:var(--muted)">Tablet</span><span style="padding:2px 8px;font-size:8px;color:var(--muted)">Móvil</span><span style="width:1px;height:14px;background:var(--border);display:inline-block;margin:0 4px"></span><span style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;padding:2px 8px;border-radius:4px;font-size:8px;font-weight:600">&#10024; IA</span></div>
+          <div style="display:flex;gap:3px"><span style="padding:2px 8px;border:1px solid var(--border);border-radius:4px;font-size:8px;color:var(--text)">Vista previa</span><span style="padding:2px 8px;border:1px solid var(--border);border-radius:4px;font-size:8px;color:var(--text)">Guardar</span><span style="background:var(--success);color:#fff;padding:2px 8px;border-radius:4px;font-size:8px;font-weight:600">Publicar</span></div>
+        </div>
+        <div class="mock-editor-body">
+          <div class="mock-palette">
+            <div class="mock-palette-title">Componentes</div>
+            <div class="mock-palette-item">&#8942;&#8942; &#9733; Navegación</div>
+            <div class="mock-palette-item" style="background:var(--bg);color:var(--primary)">&#8942;&#8942; &#10024; Hero</div>
+            <div class="mock-palette-item">&#8942;&#8942; &#128200; Estadísticas</div>
+            <div class="mock-palette-item">&#8942;&#8942; &#9638; Características</div>
+            <div class="mock-palette-item">&#8942;&#8942; &#10003; Testimonios</div>
+            <div class="mock-palette-item">&#8942;&#8942; &#63; FAQ</div>
+            <div class="mock-palette-item">&#8942;&#8942; &#9993; Formulario</div>
+            <div class="mock-palette-item">&#8942;&#8942; &#127910; Footer</div>
+            <div class="mock-palette-title" style="margin-top:8px">Capas</div>
+            <div class="mock-palette-item" style="font-size:8px;color:var(--primary);font-weight:600">1. Navegación</div>
+            <div class="mock-palette-item" style="font-size:8px;background:rgba(37,99,235,.06);color:var(--primary);font-weight:600">2. Hero &#9664;</div>
+            <div class="mock-palette-item" style="font-size:8px">3. Estadísticas</div>
+            <div class="mock-palette-item" style="font-size:8px">4. Características</div>
+          </div>
+          <div class="mock-canvas">
+            <div class="mock-canvas-frame">
+              <div class="mini-bank-nav">&#127974; Banco Meridian<span>Hipotecas &bull; Tarjetas &bull; Empresas</span></div>
+              <div class="mini-bank-hero" style="outline:2px solid var(--primary);outline-offset:-2px;position:relative">
+                <div style="position:absolute;top:2px;left:2px;background:var(--primary);color:#fff;font-size:7px;padding:1px 4px;border-radius:2px">Hero</div>
+                <h3>Tu primera vivienda con la mejor hipoteca</h3>
+                <div class="rate">Euríbor + 0,49% | TIN 2,15%</div>
+                <div class="cta">Solicitar ahora &#8594;</div>
+              </div>
+              <div class="mini-bank-stats"><div><div class="n">&euro;150M</div>Financiados</div><div><div class="n">12.000</div>Familias</div><div><div class="n">98%</div>Aprobación</div><div><div class="n">24h</div>Respuesta</div></div>
+              <div class="mini-bank-features"><h4>Ventajas de nuestra hipoteca</h4><div class="mini-feat-grid"><div><div class="mini-feat-icon">&#128176;</div>Sin comisión</div><div><div class="mini-feat-icon">&#128200;</div>Fijo/Variable</div><div><div class="mini-feat-icon">&#128197;</div>30 años</div><div><div class="mini-feat-icon">&#127968;</div>100% jóvenes</div></div></div>
+            </div>
+          </div>
+          <div class="mock-props">
+            <div class="mock-props-title">Propiedades</div>
+            <div style="font-size:10px;font-weight:700;color:var(--primary);margin-bottom:8px">Hero — Centrado</div>
+            <div class="mock-props-field"><div class="mock-props-label">Título</div><input class="mock-props-input" value="Tu primera vivienda con la mejor hipoteca" readonly></div>
+            <div class="mock-props-field"><div class="mock-props-label">Subtítulo</div><input class="mock-props-input" value="Euríbor + 0,49% | TIN 2,15%" readonly></div>
+            <div class="mock-props-field"><div class="mock-props-label">Texto CTA</div><input class="mock-props-input" value="Solicitar ahora" readonly></div>
+            <div class="mock-props-field"><div class="mock-props-label">Color fondo</div><div style="display:flex;gap:4px;align-items:center"><div style="width:20px;height:20px;border-radius:4px;background:#0C2340;border:1px solid var(--border)"></div><input class="mock-props-input" value="#0C2340" style="flex:1" readonly></div></div>
+            <div class="mock-props-field"><div class="mock-props-label">Color CTA</div><div style="display:flex;gap:4px;align-items:center"><div style="width:20px;height:20px;border-radius:4px;background:#C5A572;border:1px solid var(--border)"></div><input class="mock-props-input" value="#C5A572" style="flex:1" readonly></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 7: AI Assistant ========== -->
+  <div class="slide slide-split" data-bg="radial-gradient(ellipse at 30% 50%,rgba(124,58,237,.1),transparent 60%),#0a0a0f">
+    <div style="flex:1;max-width:400px">
+      <div class="hero-badge" style="background:rgba(124,58,237,.15);color:#a78bfa">Asistente IA (BYOK)</div>
+      <h2 style="font-size:28px;font-weight:800;margin-bottom:12px;letter-spacing:-.02em">Genera contenido<br>con tu propia API key</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:16px">Compatible con OpenAI, Anthropic y Google Gemini. Tú pones la key, nosotros ponemos la magia. Sin costes adicionales.</p>
+      <ul class="feature-list" style="font-size:13px">
+        <li><span class="icon" style="background:rgba(124,58,237,.15);color:var(--accent)">&#9998;</span> Generar headlines</li>
+        <li><span class="icon" style="background:rgba(124,58,237,.15);color:var(--accent)">&#128196;</span> Secciones completas</li>
+        <li><span class="icon" style="background:rgba(124,58,237,.15);color:var(--accent)">&#127912;</span> Landing completa desde prompt</li>
+      </ul>
+    </div>
+    <div style="flex:1;max-width:380px">
+      <div style="background:var(--card);border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow-xl)">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px"><span style="background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:700">&#10024; Asistente IA</span><span style="font-size:9px;color:var(--muted)">GPT-4o</span></div>
+        <div class="mock-ai-prompt">Genera un headline para una hipoteca dirigida a jóvenes menores de 35 años con tipo desde Euríbor + 0,49%</div>
+        <div class="mock-ai-output">
+          <div class="mock-ai-tag">&#10024; Sugerencia generada</div><br>
+          <strong>"Tu primera casa, con la hipoteca que crece contigo"</strong><br><br>
+          <span style="font-size:8px;color:var(--muted)">Alternativas:</span><br>
+          <span style="font-size:8px">• "Hipoteca Joven: 0,49% para hacer realidad tu hogar"</span><br>
+          <span style="font-size:8px">• "El primer paso hacia tu casa empieza con un 0,49%"</span>
+        </div>
+        <div style="display:flex;gap:4px;margin-top:8px">
+          <span class="mock-btn" style="font-size:9px">Aplicar</span>
+          <span class="mock-btn outline" style="font-size:9px;color:var(--text)">Regenerar</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 8: Preview + Popup ========== -->
+  <div class="slide" data-bg="#0a0a0f">
+    <div class="mockup-browser" style="max-width:800px">
+      <div class="mockup-titlebar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-url">&#128274; meridian.bank/p/hipoteca-joven</div></div>
+      <div class="mockup-body" style="min-height:360px;overflow:hidden;position:relative">
+        <div class="mini-bank-nav">&#127974; Banco Meridian<span>Hipotecas &bull; Tarjetas</span></div>
+        <div class="mini-bank-hero"><h3>Tu primera vivienda con la mejor hipoteca</h3><div class="rate">Euríbor + 0,49% | TIN 2,15%</div><div class="cta">Solicitar ahora &#8594;</div></div>
+        <div class="mini-bank-stats"><div><div class="n">&euro;150M</div>Financiados</div><div><div class="n">12.000</div>Familias</div><div><div class="n">98%</div>Aprobación</div><div><div class="n">24h</div>Respuesta</div></div>
+        <div class="mini-bank-features"><h4>Ventajas de nuestra hipoteca</h4><div class="mini-feat-grid"><div><div class="mini-feat-icon">&#128176;</div>Sin comisión</div><div><div class="mini-feat-icon">&#128200;</div>Fijo/Variable</div><div><div class="mini-feat-icon">&#128197;</div>30 años</div><div><div class="mini-feat-icon">&#127968;</div>100% jóvenes</div></div></div>
+        <!-- Popup overlay -->
+        <div class="mock-popup-overlay">
+          <div class="mock-popup-box">
+            <div style="font-size:24px;margin-bottom:6px">&#127873;</div>
+            <h5>¡Oferta exclusiva!</h5>
+            <p>Solicita tu hipoteca antes del 31 de marzo y obtén <strong>0% comisión de apertura</strong></p>
+            <div class="mock-popup-cta">Solicitar ahora</div>
+            <div style="font-size:7px;color:var(--muted);margin-top:4px">Trigger: 3s &bull; Una vez por sesión</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 9: DTR ========== -->
+  <div class="slide slide-title" data-bg="radial-gradient(ellipse at 50% 50%,rgba(245,158,11,.08),transparent 60%),#0a0a0f">
+    <div style="max-width:700px;width:100%">
+      <div class="hero-badge" style="background:rgba(245,158,11,.15);color:var(--warning)">Dynamic Text Replacement</div>
+      <h2 style="font-size:28px;font-weight:800;margin-bottom:20px;letter-spacing:-.02em">Personaliza cada visita<br>con parámetros de URL</h2>
+      <div class="mock-dtr-url">meridian.bank/p/hipoteca-joven?<span class="param">keyword=hipoteca+joven</span>&<span class="param">city=Madrid</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+        <div>
+          <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:6px">ANTES (plantilla)</div>
+          <div class="mock-dtr-before" style="color:var(--text)">
+            <div style="font-size:14px;font-weight:800;color:var(--bank-dark);margin-bottom:4px">La mejor <span class="mock-dtr-highlight" style="background:rgba(37,99,235,.15)">{{keyword}}</span> en <span class="mock-dtr-highlight" style="background:rgba(37,99,235,.15)">{{city}}</span></div>
+            <div style="font-size:10px;color:var(--muted)">Variables dinámicas sin resolver</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:6px">DESPUÉS (visitante ve)</div>
+          <div class="mock-dtr-after" style="color:var(--text)">
+            <div style="font-size:14px;font-weight:800;color:var(--bank-dark);margin-bottom:4px">La mejor <span class="mock-dtr-highlight" style="background:rgba(16,185,129,.15)">hipoteca joven</span> en <span class="mock-dtr-highlight" style="background:rgba(16,185,129,.15)">Madrid</span></div>
+            <div style="font-size:10px;color:var(--success)">&#10003; Mejora Quality Score de Google Ads</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 10: Leads ========== -->
+  <div class="slide" data-bg="#0a0a0f">
+    <div class="mockup-browser" style="max-width:900px">
+      <div class="mockup-titlebar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-url">app.landing-system.io/dashboard/leads</div></div>
+      <div class="mockup-body" style="min-height:360px">
+        <div class="mock-sidebar">
+          <div class="brand">&#127974; Banco Meridian</div>
+          <div class="mock-nav-item">&#127968; Inicio</div>
+          <div class="mock-nav-item">&#128196; Landings</div>
+          <div class="mock-nav-item active">&#128203; Leads <span style="background:var(--danger);color:#fff;font-size:7px;padding:0 4px;border-radius:6px;margin-left:auto">23</span></div>
+        </div>
+        <div class="mock-main">
+          <div class="mock-topbar">Leads <span style="background:rgba(37,99,235,.1);color:var(--primary);padding:1px 8px;border-radius:10px;font-size:9px;font-weight:700;margin-left:6px">156</span><div class="right"><span class="mock-btn outline" style="color:var(--text)">Exportar CSV</span></div></div>
+          <table class="mock-table" style="background:#fff;border-radius:8px;overflow:hidden;border:1px solid var(--border)">
+            <thead><tr><th>Nombre</th><th>Email</th><th>Landing</th><th>Fecha</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td><strong>María García López</strong></td><td>maria.garcia@gmail.com</td><td>Hipoteca Joven</td><td>18 Feb, 10:23</td><td><span class="mock-badge" style="background:rgba(37,99,235,.1);color:var(--primary)">Nuevo</span></td></tr>
+              <tr><td><strong>Carlos Ruiz Pérez</strong></td><td>c.ruiz@empresa.es</td><td>Tarjeta Platinum</td><td>18 Feb, 09:45</td><td><span class="mock-badge" style="background:rgba(37,99,235,.1);color:var(--primary)">Nuevo</span></td></tr>
+              <tr><td><strong>Ana Martínez Díaz</strong></td><td>ana.martinez@hotmail.com</td><td>Hipoteca Joven</td><td>17 Feb, 18:12</td><td><span class="mock-badge" style="background:rgba(245,158,11,.1);color:var(--warning)">Contactado</span></td></tr>
+              <tr><td><strong>Pedro Sánchez Gil</strong></td><td>p.sanchez@outlook.es</td><td>Black Friday</td><td>17 Feb, 15:30</td><td><span class="mock-badge" style="background:rgba(124,58,237,.1);color:var(--accent)">Cualificado</span></td></tr>
+              <tr><td><strong>Laura Fernández Roca</strong></td><td>lfernandez@gmail.com</td><td>Hipoteca Joven</td><td>17 Feb, 12:08</td><td><span class="mock-badge" style="background:rgba(16,185,129,.1);color:var(--success)">Convertido</span></td></tr>
+              <tr><td><strong>Javier Moreno Vega</strong></td><td>jmoreno@icloud.com</td><td>Tarjeta Platinum</td><td>16 Feb, 22:15</td><td><span class="mock-badge" style="background:rgba(245,158,11,.1);color:var(--warning)">Contactado</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 11: A/B Testing ========== -->
+  <div class="slide" data-bg="#0a0a0f">
+    <div class="mockup-browser" style="max-width:900px">
+      <div class="mockup-titlebar"><div class="mockup-dot" style="background:#ff5f57"></div><div class="mockup-dot" style="background:#ffbd2e"></div><div class="mockup-dot" style="background:#28c840"></div><div class="mockup-url">app.landing-system.io/dashboard/ab-testing</div></div>
+      <div class="mockup-body" style="min-height:380px">
+        <div class="mock-sidebar">
+          <div class="brand">&#127974; Banco Meridian</div>
+          <div class="mock-nav-item">&#127968; Inicio</div>
+          <div class="mock-nav-item">&#128196; Landings</div>
+          <div class="mock-nav-item active">&#129514; A/B Testing</div>
+        </div>
+        <div class="mock-main">
+          <div class="mock-topbar">A/B Testing</div>
+          <div style="background:#fff;border:1px solid var(--border);border-radius:8px;padding:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div><div style="font-size:12px;font-weight:700;color:var(--text)">Hipoteca Joven — Hero Test</div><div style="font-size:8px;color:var(--muted)">8 días &bull; 2.103 visitantes</div></div>
+              <span class="mock-badge" style="background:rgba(16,185,129,.1);color:var(--success);padding:2px 8px;font-size:8px">ACTIVO</span>
+            </div>
+            <div class="mock-stats" style="margin-bottom:8px">
+              <div class="mock-stat" style="padding:8px"><div class="val" style="font-size:14px">2.103</div><div class="label">Visitantes</div></div>
+              <div class="mock-stat" style="padding:8px"><div class="val" style="font-size:14px;color:var(--success)">146</div><div class="label">Conversiones</div></div>
+              <div class="mock-stat" style="padding:8px"><div class="val" style="font-size:14px">6,94%</div><div class="label">Conv. media</div></div>
+              <div class="mock-stat" style="padding:8px"><div class="val" style="font-size:14px;color:var(--success)">Var. B</div><div class="label">Ganadora</div></div>
+            </div>
+            <div class="mock-ab-variants">
+              <div class="mock-ab-var">
+                <div style="font-size:10px;font-weight:700;margin-bottom:4px">Variante A <span style="background:rgba(37,99,235,.1);color:var(--primary);padding:1px 5px;border-radius:3px;font-size:7px">Control</span></div>
+                <div style="font-size:8px;color:var(--muted);font-style:italic;margin-bottom:6px">"Tu primera vivienda con la mejor hipoteca"</div>
+                <div class="mock-ab-metric"><span>Conversiones</span><span style="font-weight:700">57</span></div>
+                <div class="mock-ab-metric"><span>Tasa conv.</span><span style="font-weight:700">5,42%</span></div>
+              </div>
+              <div class="mock-ab-var winner">
+                <div style="font-size:10px;font-weight:700;margin-bottom:4px">Variante B <span style="background:rgba(16,185,129,.1);color:var(--success);padding:1px 5px;border-radius:3px;font-size:7px">&#9650; Ganadora</span></div>
+                <div style="font-size:8px;color:var(--muted);font-style:italic;margin-bottom:6px">"Hipoteca al 0,49% para menores de 35 años"</div>
+                <div class="mock-ab-metric"><span>Conversiones</span><span style="font-weight:700;color:var(--success)">89</span></div>
+                <div class="mock-ab-metric"><span>Tasa conv.</span><span style="font-weight:700;color:var(--success)">8,47% (+56,3%)</span></div>
+              </div>
+            </div>
+            <div style="margin-top:8px;height:20px;display:flex;border-radius:6px;overflow:hidden"><div style="width:39%;background:var(--primary)"></div><div style="width:61%;background:var(--success)"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 12: Heatmaps ========== -->
+  <div class="slide slide-split" data-bg="#0a0a0f" style="gap:24px">
+    <div style="flex:1;max-width:420px">
+      <div class="hero-badge" style="background:rgba(239,68,68,.15);color:var(--danger)">Heatmaps integrados</div>
+      <h2 style="font-size:28px;font-weight:800;margin-bottom:12px">Entiende a tus<br>visitantes</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:16px">Mapas de clics, profundidad de scroll y métricas de engagement. Todo sin herramientas externas.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--primary)">2.847</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.4)">Visitantes</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--danger)">4.312</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.4)">Clics</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--success)">67%</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.4)">Scroll medio</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:20px;font-weight:800;color:var(--accent)">3:24</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.4)">Tiempo medio</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex:1;max-width:360px;display:flex;flex-direction:column;gap:12px">
+      <div class="mock-heatmap">
+        <div style="text-align:center;padding:8px;color:rgba(255,255,255,.4);font-size:8px">&#127974; Banco Meridian</div>
+        <div style="text-align:center;color:#fff;font-size:10px;font-weight:700;padding:2px">Tu primera vivienda...</div>
+        <div class="heat-dot" style="width:50px;height:50px;background:radial-gradient(circle,rgba(255,0,0,.8),rgba(255,165,0,.3),transparent);top:55px;left:42%"></div>
+        <div class="heat-dot" style="width:35px;height:35px;background:radial-gradient(circle,rgba(255,0,0,.6),rgba(255,165,0,.2),transparent);top:30px;left:50%"></div>
+        <div class="heat-dot" style="width:45px;height:45px;background:radial-gradient(circle,rgba(255,0,0,.7),rgba(255,165,0,.25),transparent);top:110px;left:48%"></div>
+        <div class="heat-dot" style="width:30px;height:30px;background:radial-gradient(circle,rgba(255,0,0,.5),rgba(255,165,0,.15),transparent);top:150px;left:30%"></div>
+      </div>
+      <div class="mock-scroll-depth" style="height:100px">
+        <div class="mock-scroll-band" style="background:linear-gradient(180deg,#10b981,#10b981 95%,transparent)">95%</div>
+        <div class="mock-scroll-band" style="background:linear-gradient(180deg,#3b82f6,#3b82f6 82%,transparent)">82%</div>
+        <div class="mock-scroll-band" style="background:linear-gradient(180deg,#f59e0b,#f59e0b 67%,transparent)">67%</div>
+        <div class="mock-scroll-band" style="background:linear-gradient(180deg,#ef4444,#ef4444 34%,transparent)">34%</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 13: Accessibility ========== -->
+  <div class="slide slide-split" data-bg="radial-gradient(ellipse at 60% 50%,rgba(16,185,129,.08),transparent 60%),#0a0a0f">
+    <div style="flex:1;max-width:350px">
+      <div class="hero-badge" style="background:rgba(16,185,129,.15);color:var(--success)">Accesibilidad WCAG 2.1</div>
+      <h2 style="font-size:28px;font-weight:800;margin-bottom:12px">Auditoría automática<br>de accesibilidad</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.6">Ningún competidor lo ofrece. Puntuación 0-100, detección de problemas y sugerencias de auto-corrección.</p>
+    </div>
+    <div style="flex:1;max-width:420px">
+      <div style="background:var(--card);border-radius:var(--radius-lg);padding:16px;box-shadow:var(--shadow-xl)">
+        <div style="text-align:center;margin-bottom:12px">
+          <div class="mock-a11y-score">92</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text)">Puntuación WCAG 2.1 AA</div>
+          <div style="font-size:9px;color:var(--muted)">Hipoteca Joven Meridian</div>
+        </div>
+        <div class="mock-a11y-issue">
+          <div class="mock-issue-dot" style="background:var(--warning)">!</div>
+          <div><div style="font-weight:600;color:var(--text)">Contraste insuficiente en footer</div><div style="color:var(--muted);margin-top:2px">Solución: Cambiar a #94a3b8 (ratio 4.7:1)</div></div>
+        </div>
+        <div class="mock-a11y-issue">
+          <div class="mock-issue-dot" style="background:var(--primary)">i</div>
+          <div><div style="font-weight:600;color:var(--text)">Vídeo sin subtítulos</div><div style="color:var(--muted);margin-top:2px">Solución: Añadir transcripción</div></div>
+        </div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:9px;color:var(--success);line-height:1.8">
+          &#10003; Alt text en imágenes &bull; &#10003; Jerarquía headings &bull; &#10003; Labels formularios &bull; &#10003; Links descriptivos
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 14: SEO & LLM ========== -->
+  <div class="slide slide-split" data-bg="#0a0a0f" style="gap:24px">
+    <div style="flex:1;max-width:350px">
+      <div class="hero-badge">SEO + Navegación LLM</div>
+      <h2 style="font-size:26px;font-weight:800;margin-bottom:12px;letter-spacing:-.02em">Preparado para<br>Google y para<br>ChatGPT</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:12px">JSON-LD automático, sitemap dinámico, meta tags, robots.txt para bots IA, y llms.txt para crawlers LLM.</p>
+      <ul class="feature-list" style="font-size:12px">
+        <li><span class="icon" style="background:rgba(37,99,235,.15);color:var(--primary);font-size:11px">&#128270;</span> Schema.org auto-generado</li>
+        <li><span class="icon" style="background:rgba(16,185,129,.15);color:var(--success);font-size:11px">&#129302;</span> llms.txt + ai-plugin.json</li>
+        <li><span class="icon" style="background:rgba(124,58,237,.15);color:var(--accent);font-size:11px">&#128196;</span> Contenido oculto para bots</li>
+      </ul>
+    </div>
+    <div style="flex:1;max-width:440px">
+      <div class="mock-code" style="font-size:8px;line-height:1.7;margin-bottom:10px">
+        <span class="com">// Auto-generated JSON-LD</span><br>
+        <span class="tag">&lt;script</span> <span class="key">type</span>=<span class="str">"application/ld+json"</span><span class="tag">&gt;</span><br>
+        {<br>
+        &nbsp;&nbsp;<span class="key">"@type"</span>: <span class="str">"WebPage"</span>,<br>
+        &nbsp;&nbsp;<span class="key">"name"</span>: <span class="str">"Hipoteca Joven Meridian"</span>,<br>
+        &nbsp;&nbsp;<span class="key">"publisher"</span>: {<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"@type"</span>: <span class="str">"Organization"</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="key">"name"</span>: <span class="str">"Banco Meridian"</span><br>
+        &nbsp;&nbsp;}<br>
+        }<br>
+        <span class="tag">&lt;/script&gt;</span>
+      </div>
+      <div class="mock-code" style="font-size:8px;line-height:1.7">
+        <span class="com"># /llms.txt</span><br>
+        <span class="key">> Landing System</span><br>
+        <span class="str">Plataforma de landing pages</span><br><br>
+        <span class="com">## Landings publicadas</span><br>
+        - <span class="str">Hipoteca Joven</span>: /p/hipoteca-joven<br>
+        - <span class="str">Tarjeta Platinum</span>: /p/tarjeta-platinum<br>
+        - <span class="str">Black Friday</span>: /p/black-friday-2026
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 15: Architecture ========== -->
+  <div class="slide slide-title" data-bg="radial-gradient(ellipse at 50% 60%,rgba(37,99,235,.08),transparent 60%),#0a0a0f">
+    <div>
+      <div class="hero-badge">Arquitectura</div>
+      <h2 style="font-size:30px;font-weight:800;margin-bottom:24px;letter-spacing:-.02em">Stack tecnológico</h2>
+      <div class="arch-grid">
+        <div class="arch-card"><div class="icon">&#9883;</div><h5>Next.js 15</h5><p>App Router, React 19, SSR + ISR, Server Components</p></div>
+        <div class="arch-card"><div class="icon">&#128218;</div><h5>Prisma 6 + PostgreSQL</h5><p>ORM type-safe, migraciones, JSON columns</p></div>
+        <div class="arch-card"><div class="icon">&#127912;</div><h5>Tailwind CSS</h5><p>Utility-first, temas, responsive, dark mode</p></div>
+        <div class="arch-card"><div class="icon">&#128256;</div><h5>@dnd-kit + Zustand</h5><p>Drag-and-drop fluido, state management, undo/redo</p></div>
+        <div class="arch-card"><div class="icon">&#128272;</div><h5>Seguridad bank-grade</h5><p>CSP, OWASP, audit log, encryption, RBAC</p></div>
+        <div class="arch-card"><div class="icon">&#128230;</div><h5>Docker Compose</h5><p>Un comando para instalar. PostgreSQL + Redis + App</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 16: Comparison ========== -->
+  <div class="slide slide-title" data-bg="#0a0a0f">
+    <div style="width:100%;max-width:850px">
+      <div class="hero-badge">Comparativa</div>
+      <h2 style="font-size:28px;font-weight:800;margin-bottom:24px;letter-spacing:-.02em">Landing System vs la competencia</h2>
+      <table class="compare-table">
+        <thead><tr><th>Funcionalidad</th><th>Unbounce</th><th>Instapage</th><th>HubSpot</th><th class="highlight-col" style="color:var(--primary)">Landing System</th></tr></thead>
+        <tbody>
+          <tr><td>Editor drag-and-drop</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="highlight-col check">&#10003;</td></tr>
+          <tr><td>A/B Testing</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="check">&#10003;</td><td class="highlight-col check">&#10003;</td></tr>
+          <tr><td>IA generativa (BYOK)</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="highlight-col check">&#10003;</td></tr>
+          <tr><td>Heatmaps integrados</td><td class="cross">&#10007;</td><td style="color:var(--warning)">$299+</td><td class="cross">&#10007;</td><td class="highlight-col check">&#10003;</td></tr>
+          <tr><td>Accesibilidad WCAG</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="highlight-col check">&#10003;</td></tr>
+          <tr><td>Navegación LLM</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="highlight-col check">&#10003;</td></tr>
+          <tr><td>Popups + DTR</td><td class="check">&#10003;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="highlight-col check">&#10003;</td></tr>
+          <tr><td>Multi-tenant</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="check">&#10003;</td><td class="highlight-col check">&#10003;</td></tr>
+          <tr><td>Self-hosted</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="cross">&#10007;</td><td class="highlight-col check">&#10003;</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 17: Pricing ========== -->
+  <div class="slide slide-title" data-bg="radial-gradient(ellipse at 50% 50%,rgba(37,99,235,.1),transparent 60%),#0a0a0f">
+    <div>
+      <div class="hero-badge">Modelo de negocio</div>
+      <h2 style="font-size:30px;font-weight:800;margin-bottom:24px;letter-spacing:-.02em">Planes y precios</h2>
+      <div class="mock-pricing">
+        <div class="mock-plan">
+          <h4>Free</h4>
+          <div class="price">0€<span>/mes</span></div>
+          <ul>
+            <li>3 landings</li>
+            <li>Editor completo</li>
+            <li>SEO automático</li>
+            <li>1 popup</li>
+            <li>Branding incluido</li>
+          </ul>
+        </div>
+        <div class="mock-plan featured">
+          <h4>Pro</h4>
+          <div class="price">49€<span>/mes</span></div>
+          <ul>
+            <li>Landings ilimitadas</li>
+            <li>IA generativa (BYOK)</li>
+            <li>A/B Testing</li>
+            <li>Heatmaps</li>
+            <li>Accesibilidad WCAG</li>
+            <li>Sin branding</li>
+          </ul>
+        </div>
+        <div class="mock-plan">
+          <h4>Enterprise</h4>
+          <div class="price">199€<span>/mes</span></div>
+          <ul>
+            <li>Todo en Pro</li>
+            <li>White-label</li>
+            <li>SSO / SAML</li>
+            <li>API access</li>
+            <li>SLA 99.9%</li>
+            <li>Soporte prioritario</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 18: Summary ========== -->
+  <div class="slide slide-title" data-bg="#0a0a0f">
+    <div>
+      <div class="hero-icon">&#128640;</div>
+      <div class="hero-title" style="font-size:36px">Resumen ejecutivo</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:24px;max-width:700px">
+        <div style="text-align:center"><div style="font-size:32px;font-weight:900;color:var(--primary)">10</div><div style="font-size:11px;color:rgba(255,255,255,.5)">Módulos<br>integrados</div></div>
+        <div style="text-align:center"><div style="font-size:32px;font-weight:900;color:var(--success)">0€</div><div style="font-size:11px;color:rgba(255,255,255,.5)">Plan<br>gratuito</div></div>
+        <div style="text-align:center"><div style="font-size:32px;font-weight:900;color:var(--accent)">1</div><div style="font-size:11px;color:rgba(255,255,255,.5)">Comando para<br>instalar</div></div>
+        <div style="text-align:center"><div style="font-size:32px;font-weight:900;color:var(--warning)">&#8734;</div><div style="font-size:11px;color:rgba(255,255,255,.5)">Escalabilidad<br>multi-tenant</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== SLIDE 19: Closing ========== -->
+  <div class="slide slide-title" data-bg="radial-gradient(ellipse at 50% 50%,rgba(37,99,235,.15),transparent 50%),radial-gradient(ellipse at 80% 20%,rgba(124,58,237,.1),transparent 50%),#0a0a0f">
+    <div>
+      <div style="font-size:80px;margin-bottom:20px">&#127974;</div>
+      <div class="hero-title" style="font-size:42px">Landing System v2.0</div>
+      <div class="hero-subtitle" style="margin:12px auto 0">La plataforma de landing pages que<br>supera a Unbounce, Instapage y HubSpot.</div>
+      <div style="margin-top:24px;display:flex;gap:12px;justify-content:center">
+        <div style="background:var(--primary);color:#fff;padding:10px 28px;border-radius:8px;font-weight:700;font-size:14px">Solicitar demo</div>
+        <div style="background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.15);padding:10px 28px;border-radius:8px;font-weight:600;font-size:14px">Documentación</div>
+      </div>
+      <div style="margin-top:20px;font-size:12px;color:rgba(255,255,255,.3)">Gracias por ver la demo completa</div>
+    </div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div id="controls" class="force-show">
+  <button class="ctrl-btn" id="btn-play" onclick="togglePlay()" title="Reproducir/Pausar">&#9654;</button>
+  <button class="ctrl-btn" id="btn-prev" onclick="prevSlide()" title="Anterior">&#9664;</button>
+  <button class="ctrl-btn" id="btn-next" onclick="nextSlide()" title="Siguiente">&#9654;</button>
+  <div class="progress-track" onclick="seekTo(event)" title="Buscar">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+  <span id="time-display">00:00 / 14:00</span>
+  <span id="scene-counter">1 / 20</span>
+  <button class="ctrl-btn" id="btn-voice" onclick="toggleVoice()" title="Voz">&#128264;</button>
+  <button class="ctrl-btn" id="btn-mute" onclick="toggleMute()" title="Silenciar">&#128266;</button>
+</div>
+
+<script>
+// =====================================================================
+// SCENE DEFINITIONS
+// =====================================================================
+const SCENES = [
+  { // 0 — Title
+    duration: 42,
+    chapter: 'Introducción',
+    narration: 'Bienvenidos a la demo completa de Landing System versión 2. Durante los próximos 14 minutos vamos a recorrer todas las funcionalidades de la plataforma con un caso real: el Banco Nacional Meridian. Landing System es una plataforma de landing pages profesional que compite directamente con Unbounce, Instapage, Leadpages y HubSpot.',
+  },
+  { // 1 — Problem
+    duration: 40,
+    chapter: 'El problema',
+    narration: 'El problema que resolvemos es claro. Unbounce cobra 249 dólares al mes. Instapage 299. HubSpot más de 800. Y ninguno ofrece inteligencia artificial, heatmaps, accesibilidad y A B testing juntos en un solo producto. Landing System lo cambia todo: todas las funcionalidades integradas, desde cero euros al mes.',
+  },
+  { // 2 — Features
+    duration: 45,
+    chapter: 'Funcionalidades',
+    narration: 'Landing System incluye 10 módulos integrados. Editor drag and drop. Asistente de inteligencia artificial con BYOK, trae tu propia API key. A B testing. Heatmaps de clics y scroll. Popups inteligentes con triggers. SEO automático con JSON-LD. Auditoría de accesibilidad WCAG. Gestión de leads. Reemplazo dinámico de texto para Google Ads. Y navegación optimizada para ChatGPT, Perplexity y Claude.',
+  },
+  { // 3 — Login
+    duration: 35,
+    chapter: 'Acceso al sistema',
+    narration: 'Empezamos con el acceso al sistema. La pantalla de login es limpia y profesional. Cada empresa tiene su propio espacio multi-tenant. En este caso, Carlos Martínez, el responsable de marketing digital del Banco Meridian, accede con sus credenciales corporativas.',
+  },
+  { // 4 — Dashboard
+    duration: 50,
+    chapter: 'Dashboard',
+    narration: 'El dashboard muestra de un vistazo las métricas clave. 4 landings activas, 2.847 visitantes hoy con un incremento del 12 por ciento, 156 leads este mes y una tasa de conversión del 5,48 por ciento. A la izquierda tenemos la actividad reciente: nuevos leads, landings publicadas, resultados de A B tests y auditorías de accesibilidad. A la derecha, un gráfico de visitantes por día de la última semana.',
+  },
+  { // 5 — Landings
+    duration: 45,
+    chapter: 'Gestión de landings',
+    narration: 'La vista de landings muestra todas las páginas creadas. Cada tarjeta incluye una vista previa visual, el estado (publicada o borrador), métricas de visitas, leads y conversión, y acciones rápidas. El banco tiene 4 landings: Hipoteca Joven, Tarjeta Platinum Business, Cuenta Empresas Pro en borrador, y una campaña de Black Friday con un A B test activo.',
+  },
+  { // 6 — Editor
+    duration: 55,
+    chapter: 'Editor visual',
+    narration: 'El editor es el corazón del sistema. Tiene tres columnas. A la izquierda, la paleta de componentes arrastrables y la lista de capas con el orden visual. En el centro, el canvas donde se ve la landing en tiempo real. Y a la derecha, el panel de propiedades que se actualiza según la sección seleccionada. El editor soporta responsive: escritorio, tablet y móvil. Tiene undo y redo ilimitados, y un punto naranja indica cambios sin guardar.',
+  },
+  { // 7 — AI
+    duration: 50,
+    chapter: 'Asistente IA',
+    narration: 'El asistente de inteligencia artificial es un diferenciador masivo. Funciona con BYOK: el usuario pone su propia API key de OpenAI, Anthropic o Google, y nosotros ponemos la integración. Sin costes adicionales. Puede generar headlines, descripciones, secciones completas, e incluso una landing entera desde un prompt. En el ejemplo, pedimos un headline para hipoteca joven y nos sugiere tres alternativas.',
+  },
+  { // 8 — Preview + Popup
+    duration: 42,
+    chapter: 'Vista previa y popups',
+    narration: 'La vista previa muestra la landing tal como la verá el visitante. La URL es el dominio real del banco. Después de 3 segundos aparece un popup con una oferta exclusiva de cero por ciento de comisión de apertura. Los popups son configurables con triggers: temporizador, scroll, exit-intent o clic. Se puede definir la frecuencia: una vez por sesión, una vez por visitante, o siempre.',
+  },
+  { // 9 — DTR
+    duration: 42,
+    chapter: 'Dynamic Text Replacement',
+    narration: 'El reemplazo dinámico de texto, o DTR, permite personalizar la landing según los parámetros de la URL. Si un visitante llega desde Google Ads con keyword igual a hipoteca joven y city igual a Madrid, la landing sustituye automáticamente las variables por esos valores. Esto mejora el Quality Score de Google Ads y aumenta la tasa de conversión al personalizar el mensaje.',
+  },
+  { // 10 — Leads
+    duration: 48,
+    chapter: 'Gestión de leads',
+    narration: 'La gestión de leads centraliza todos los contactos capturados. La tabla muestra nombre, email, teléfono, la landing de origen, fecha y estado del lead. Los estados van de Nuevo a Contactado, Cualificado y Convertido. Se puede filtrar por landing y exportar a CSV. El badge en el sidebar indica 23 leads nuevos sin gestionar. En el ejemplo vemos leads reales del banco con nombres españoles.',
+  },
+  { // 11 — AB Testing
+    duration: 55,
+    chapter: 'A/B Testing',
+    narration: 'El módulo de A B testing permite crear experimentos con múltiples variantes. En el ejemplo, el banco está probando dos versiones del hero de Hipoteca Joven. La variante A, el control, dice "Tu primera vivienda con la mejor hipoteca". La variante B dice "Hipoteca al 0,49 por ciento para menores de 35 años". Después de 8 días y 2.103 visitantes, la variante B gana con un lift del 56 por ciento en conversión: 8,47 frente a 5,42. La barra visual muestra la diferencia.',
+  },
+  { // 12 — Heatmaps
+    duration: 48,
+    chapter: 'Heatmaps',
+    narration: 'Los heatmaps muestran dónde hacen clic los visitantes y hasta dónde hacen scroll. El mapa de clics usa puntos de calor con degradado de rojo a transparente. La profundidad de scroll muestra que el 95 por ciento ve el hero, el 82 las características, el 67 llega al formulario y solo el 34 al footer. Todo integrado, sin necesidad de contratar Hotjar o herramientas externas.',
+  },
+  { // 13 — Accessibility
+    duration: 45,
+    chapter: 'Accesibilidad',
+    narration: 'La auditoría de accesibilidad WCAG 2.1 es una innovación que ningún competidor ofrece. Analiza automáticamente la landing y asigna una puntuación de 0 a 100. La hipoteca joven obtiene un 92. Detecta un aviso de contraste insuficiente en el footer y sugiere el color exacto con el ratio necesario. También nota un vídeo sin subtítulos. Y confirma 4 reglas superadas: alt text, jerarquía de encabezados, labels y links descriptivos.',
+  },
+  { // 14 — SEO/LLM
+    duration: 45,
+    chapter: 'SEO y navegación LLM',
+    narration: 'Landing System genera automáticamente JSON-LD con Schema punto org para cada landing: WebPage, Organization, BreadcrumbList, FAQPage, Product con ofertas, HowTo y VideoObject. También implementa llms punto txt, el estándar para que crawlers de inteligencia artificial como ChatGPT y Perplexity indexen el contenido. Además, robots punto txt tiene reglas específicas para bots IA, y cada landing incluye contenido oculto legible por máquinas.',
+  },
+  { // 15 — Architecture
+    duration: 42,
+    chapter: 'Arquitectura',
+    narration: 'La arquitectura usa Next punto js 15 con App Router y React 19. Prisma 6 con PostgreSQL para la base de datos. Tailwind CSS para los estilos. DND Kit con Zustand para el drag and drop y el estado. Seguridad de nivel bancario con CSP, OWASP, audit log y encriptación. Y Docker Compose para que toda la instalación se haga con un solo comando.',
+  },
+  { // 16 — Comparison
+    duration: 48,
+    chapter: 'Comparativa',
+    narration: 'En esta comparativa vemos cómo Landing System supera a la competencia. Mientras que Unbounce, Instapage y HubSpot ofrecen editor y A B testing, ninguno incluye inteligencia artificial con BYOK, heatmaps integrados sin coste extra, accesibilidad WCAG automática, ni navegación para LLMs. Además, Landing System es el único que ofrece self-hosting y multi-tenancy real.',
+  },
+  { // 17 — Pricing
+    duration: 42,
+    chapter: 'Precios',
+    narration: 'El modelo de negocio es freemium con tres planes. Free: cero euros, incluye 3 landings, editor completo y SEO automático. Pro: 49 euros al mes con landings ilimitadas, IA, A B testing, heatmaps, accesibilidad y sin branding. Enterprise: 199 euros al mes con white-label, SSO, API access y SLA del 99,9 por ciento. Comparado con Unbounce a 249 dólares, somos drásticamente más asequibles.',
+  },
+  { // 18 — Summary
+    duration: 35,
+    chapter: 'Resumen',
+    narration: '10 módulos integrados. Plan gratuito desde cero euros. Un solo comando para instalar. Escalabilidad ilimitada con arquitectura multi-tenant. Landing System es la plataforma de landing pages más completa del mercado.',
+  },
+  { // 19 — Closing
+    duration: 36,
+    chapter: 'Cierre',
+    narration: 'Esto ha sido la demo completa de Landing System versión 2 punto 0. La plataforma que supera a Unbounce, Instapage y HubSpot. Con un caso real del Banco Nacional Meridian. Gracias por ver esta presentación. Si desea solicitar una demo personalizada o acceder a la documentación técnica, no dude en contactarnos.',
+  },
+];
+
+// =====================================================================
+// STATE
+// =====================================================================
+let currentSlide = 0;
+let isPlaying = false;
+let elapsedTime = 0;
+let sceneElapsed = 0;
+let voiceEnabled = true;
+let isMuted = false;
+let timerInterval = null;
+let currentUtterance = null;
+
+const TOTAL_DURATION = SCENES.reduce((s, sc) => s + sc.duration, 0);
+const slides = document.querySelectorAll('.slide');
+
+// =====================================================================
+// RENDERING
+// =====================================================================
+function goToSlide(index, speak = true) {
+  if (index < 0 || index >= slides.length) return;
+
+  // Cancel current speech
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+    currentUtterance = null;
+  }
+
+  // Transition slides
+  slides[currentSlide].classList.remove('active');
+  slides[currentSlide].classList.add('exit');
+  setTimeout(() => slides[currentSlide === index ? 0 : currentSlide].classList.remove('exit'), 600);
+
+  currentSlide = index;
+  sceneElapsed = 0;
+  slides[currentSlide].classList.add('active');
+
+  // Apply background
+  const bg = slides[currentSlide].dataset.bg;
+  if (bg) slides[currentSlide].style.background = bg;
+
+  // Update UI
+  updateControls();
+
+  // Narrate
+  if (speak && voiceEnabled && !isMuted) {
+    narrate(SCENES[currentSlide].narration);
+  }
+
+  // Show narration text
+  showNarrationText(SCENES[currentSlide].narration);
+}
+
+function updateControls() {
+  const scene = SCENES[currentSlide];
+  document.getElementById('chapter-label').textContent = scene.chapter;
+  document.getElementById('scene-counter').textContent = `${currentSlide + 1} / ${slides.length}`;
+
+  // Calculate cumulative time up to current slide
+  let cumTime = 0;
+  for (let i = 0; i < currentSlide; i++) cumTime += SCENES[i].duration;
+  elapsedTime = cumTime + sceneElapsed;
+
+  const pct = (elapsedTime / TOTAL_DURATION) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  const elapsed = formatTime(elapsedTime);
+  const total = formatTime(TOTAL_DURATION);
+  document.getElementById('time-display').textContent = `${elapsed} / ${total}`;
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+}
+
+function showNarrationText(text) {
+  const box = document.getElementById('narration-box');
+  box.textContent = text;
+  box.classList.add('show');
+  // Keep showing during the scene
+}
+
+function hideNarrationText() {
+  document.getElementById('narration-box').classList.remove('show');
+}
+
+// =====================================================================
+// NAVIGATION
+// =====================================================================
+function nextSlide() {
+  if (currentSlide < slides.length - 1) {
+    goToSlide(currentSlide + 1);
+  } else if (isPlaying) {
+    togglePlay(); // Stop at end
+  }
+}
+
+function prevSlide() {
+  if (currentSlide > 0) goToSlide(currentSlide - 1);
+}
+
+function seekTo(e) {
+  const track = e.currentTarget;
+  const rect = track.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  const targetTime = pct * TOTAL_DURATION;
+
+  // Find the slide for this time
+  let cumTime = 0;
+  for (let i = 0; i < SCENES.length; i++) {
+    if (cumTime + SCENES[i].duration > targetTime) {
+      sceneElapsed = targetTime - cumTime;
+      goToSlide(i);
+      return;
+    }
+    cumTime += SCENES[i].duration;
+  }
+}
+
+// =====================================================================
+// PLAYBACK
+// =====================================================================
+function togglePlay() {
+  isPlaying = !isPlaying;
+  document.getElementById('btn-play').innerHTML = isPlaying ? '&#9646;&#9646;' : '&#9654;';
+
+  if (isPlaying) {
+    // If at end, restart
+    if (currentSlide >= slides.length - 1 && sceneElapsed >= SCENES[currentSlide].duration) {
+      goToSlide(0);
+    }
+
+    // Start if not speaking
+    if (!currentUtterance && voiceEnabled && !isMuted) {
+      narrate(SCENES[currentSlide].narration);
+    }
+
+    startTimer();
+  } else {
+    stopTimer();
+    if (window.speechSynthesis) window.speechSynthesis.pause();
+  }
+}
+
+function startTimer() {
+  stopTimer();
+  timerInterval = setInterval(() => {
+    if (!isPlaying) return;
+    sceneElapsed += 0.5;
+
+    if (sceneElapsed >= SCENES[currentSlide].duration) {
+      if (currentSlide < slides.length - 1) {
+        nextSlide();
+      } else {
+        isPlaying = false;
+        document.getElementById('btn-play').innerHTML = '&#9654;';
+        stopTimer();
+      }
+    }
+    updateControls();
+  }, 500);
+}
+
+function stopTimer() {
+  if (timerInterval) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+}
+
+// =====================================================================
+// SPEECH
+// =====================================================================
+function narrate(text) {
+  if (!window.speechSynthesis || !voiceEnabled || isMuted) return;
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'es-ES';
+  utterance.rate = 0.92;
+  utterance.pitch = 1;
+
+  // Try to find a good Spanish voice
+  const voices = window.speechSynthesis.getVoices();
+  const esVoice = voices.find(v => v.lang.startsWith('es') && v.name.includes('Microsoft')) ||
+                  voices.find(v => v.lang.startsWith('es') && v.name.includes('Jorge')) ||
+                  voices.find(v => v.lang.startsWith('es-ES')) ||
+                  voices.find(v => v.lang.startsWith('es'));
+  if (esVoice) utterance.voice = esVoice;
+
+  utterance.onend = () => { currentUtterance = null; };
+  currentUtterance = utterance;
+  window.speechSynthesis.speak(utterance);
+}
+
+function toggleVoice() {
+  voiceEnabled = !voiceEnabled;
+  const btn = document.getElementById('btn-voice');
+  btn.classList.toggle('active', voiceEnabled);
+  btn.innerHTML = voiceEnabled ? '&#128264;' : '&#128263;';
+  if (!voiceEnabled && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+    currentUtterance = null;
+  }
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  const btn = document.getElementById('btn-mute');
+  btn.innerHTML = isMuted ? '&#128263;' : '&#128266;';
+  if (isMuted && window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+    currentUtterance = null;
+  }
+}
+
+// =====================================================================
+// KEYBOARD SHORTCUTS
+// =====================================================================
+document.addEventListener('keydown', (e) => {
+  switch (e.key) {
+    case ' ':
+    case 'k':
+      e.preventDefault();
+      togglePlay();
+      break;
+    case 'ArrowRight':
+    case 'l':
+      nextSlide();
+      break;
+    case 'ArrowLeft':
+    case 'j':
+      prevSlide();
+      break;
+    case 'm':
+      toggleMute();
+      break;
+    case 'v':
+      toggleVoice();
+      break;
+  }
+});
+
+// =====================================================================
+// INIT
+// =====================================================================
+// Load voices
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
+
+// Apply initial background
+const initBg = slides[0].dataset.bg;
+if (initBg) slides[0].style.background = initBg;
+
+updateControls();
+showNarrationText(SCENES[0].narration);
+
+// Auto-hide controls after 3 seconds
+let controlsTimer;
+document.getElementById('presentation').addEventListener('mousemove', () => {
+  document.getElementById('controls').classList.add('force-show');
+  clearTimeout(controlsTimer);
+  controlsTimer = setTimeout(() => {
+    if (isPlaying) document.getElementById('controls').classList.remove('force-show');
+  }, 3000);
+});
+</script>
+</body>
+</html>
