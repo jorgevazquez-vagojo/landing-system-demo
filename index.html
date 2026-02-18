@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Landing System v2 — Demo Interactiva</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --primary: #2563eb;
+    --primary-light: #3b82f6;
+    --primary-dark: #1d4ed8;
+    --accent: #7c3aed;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --bg: #0f172a;
+    --bg-card: #1e293b;
+    --bg-card-hover: #334155;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: #334155;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+    user-select: none;
+  }
+
+  /* ===== SLIDE CONTAINER ===== */
+  #slideshow {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    padding: 40px 80px;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .slide.active {
+    display: flex;
+    opacity: 1;
+  }
+
+  /* ===== CONTROLS BAR ===== */
+  #controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 100;
+    padding: 0 24px;
+  }
+
+  #controls button {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  #controls button:hover { background: var(--bg-card-hover); border-color: var(--primary); }
+  #controls button.active { background: var(--primary); border-color: var(--primary); }
+  #controls button:disabled { opacity: 0.3; cursor: default; }
+
+  #progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transition: width 0.4s ease;
+    z-index: 200;
+  }
+
+  #slide-counter {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  #timer {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    position: fixed;
+    top: 16px;
+    right: 24px;
+    background: rgba(15,23,42,0.8);
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    z-index: 100;
+  }
+
+  /* ===== TYPOGRAPHY ===== */
+  .slide-title {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .slide-title .highlight {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .slide-subtitle {
+    font-size: 22px;
+    color: var(--text-muted);
+    font-weight: 400;
+    line-height: 1.5;
+    max-width: 700px;
+  }
+
+  .section-label {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+
+  /* ===== FEATURE GRID ===== */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .feature-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .feature-card:hover::before { opacity: 1; }
+  .feature-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+
+  .feature-card .icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-bottom: 14px;
+  }
+
+  .feature-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .feature-card p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ===== MOCKUP STYLES ===== */
+  .mockup-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 24px;
+  }
+
+  .mockup-browser {
+    background: #1a1a2e;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .mockup-titlebar {
+    height: 36px;
+    background: #16162a;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .mockup-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .mockup-dot.red { background: #ff5f57; }
+  .mockup-dot.yellow { background: #febc2e; }
+  .mockup-dot.green { background: #28c840; }
+
+  .mockup-url {
+    margin-left: 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 6px;
+    padding: 4px 14px;
+    font-size: 11px;
+    color: var(--text-muted);
+    flex: 1;
+    max-width: 400px;
+  }
+
+  .mockup-content {
+    padding: 20px;
+    min-height: 360px;
+    position: relative;
+  }
+
+  /* ===== EDITOR MOCKUP ===== */
+  .editor-layout {
+    display: flex;
+    height: 340px;
+    gap: 0;
+  }
+
+  .editor-sidebar {
+    width: 200px;
+    background: #12122a;
+    border-right: 1px solid var(--border);
+    padding: 12px;
+    overflow-y: auto;
+  }
+
+  .editor-canvas {
+    flex: 1;
+    background: #ffffff;
+    overflow-y: auto;
+  }
+
+  .editor-props {
+    width: 240px;
+    background: #12122a;
+    border-left: 1px solid var(--border);
+    padding: 12px;
+    overflow-y: auto;
+  }
+
+  .editor-toolbar {
+    height: 40px;
+    background: #16162a;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+  }
+
+  .toolbar-btn {
+    background: var(--primary);
+    border: none;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .toolbar-btn.secondary { background: var(--bg-card); }
+  .toolbar-btn.purple { background: var(--accent); }
+
+  .palette-item {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .palette-item:hover { background: rgba(255,255,255,0.05); color: white; }
+
+  .prop-label { font-size: 10px; color: var(--text-muted); margin-bottom: 3px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .prop-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; font-size: 11px; color: white; margin-bottom: 10px; }
+
+  /* Canvas sections */
+  .canvas-section {
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+    position: relative;
+  }
+
+  .canvas-section.highlighted {
+    outline: 2px solid var(--primary);
+    outline-offset: -2px;
+  }
+
+  .canvas-hero {
+    background: linear-gradient(135deg, #1e40af, #7c3aed);
+    color: white;
+    padding: 30px;
+    text-align: center;
+    border-radius: 0;
+  }
+
+  .canvas-hero h1 { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+  .canvas-hero p { font-size: 12px; opacity: 0.8; margin-bottom: 12px; }
+  .canvas-hero .btn { background: white; color: #1e40af; padding: 6px 18px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-block; }
+
+  .canvas-features { padding: 20px; background: white; }
+  .canvas-features h2 { font-size: 14px; font-weight: 700; color: #1f2937; text-align: center; margin-bottom: 12px; }
+  .features-row { display: flex; gap: 12px; }
+  .feature-mini { flex: 1; text-align: center; padding: 10px 6px; }
+  .feature-mini .dot { width: 28px; height: 28px; border-radius: 8px; background: #eff6ff; margin: 0 auto 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+  .feature-mini h4 { font-size: 10px; font-weight: 700; color: #1f2937; }
+  .feature-mini p { font-size: 9px; color: #6b7280; }
+
+  /* ===== COMPARISON TABLE ===== */
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 14px;
+  }
+
+  .comparison-table th {
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 700;
+    border-bottom: 2px solid var(--border);
+    background: var(--bg-card);
+  }
+
+  .comparison-table th.us {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: white;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .comparison-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .comparison-table td.feature { color: var(--text); font-weight: 500; }
+  .check { color: var(--success); font-weight: 700; }
+  .cross { color: var(--danger); opacity: 0.5; }
+  .price-tag { font-weight: 700; }
+  .price-tag.free { color: var(--success); }
+
+  /* ===== STATS ROW ===== */
+  .stats-row {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+  }
+
+  .stat-card {
+    flex: 1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .stat-card .number {
+    font-size: 42px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stat-card .label { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+  /* ===== DASHBOARD MOCKUP ===== */
+  .dashboard-layout {
+    display: flex;
+    height: 340px;
+  }
+
+  .dash-sidebar {
+    width: 180px;
+    background: #12122a;
+    border-right: 1px solid var(--border);
+    padding: 16px 8px;
+  }
+
+  .dash-nav-item {
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dash-nav-item.active { background: rgba(37, 99, 235, 0.15); color: var(--primary-light); }
+
+  .dash-main { flex: 1; padding: 20px; overflow-y: auto; }
+
+  .dash-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .dash-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .dash-card p { font-size: 11px; color: var(--text-muted); }
+
+  .mini-chart {
+    height: 60px;
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    margin-top: 8px;
+  }
+
+  .mini-bar {
+    flex: 1;
+    border-radius: 3px 3px 0 0;
+    min-height: 4px;
+    transition: height 0.5s;
+  }
+
+  /* ===== HEATMAP MOCKUP ===== */
+  .heatmap-dot {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.1); }
+  }
+
+  /* ===== POPUP MOCKUP ===== */
+  .popup-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .popup-modal {
+    background: white;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 320px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    position: relative;
+  }
+
+  .popup-modal .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    color: #9ca3af;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  .popup-modal h3 { color: #1f2937; font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+  .popup-modal p { color: #6b7280; font-size: 13px; margin-bottom: 14px; }
+  .popup-modal .popup-cta { background: var(--primary); color: white; padding: 8px 24px; border-radius: 8px; font-size: 13px; font-weight: 700; display: inline-block; }
+
+  /* ===== AI PANEL MOCKUP ===== */
+  .ai-sparkle {
+    display: inline-block;
+    animation: sparkle 1.5s ease-in-out infinite;
+  }
+
+  @keyframes sparkle {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.2); }
+  }
+
+  /* ===== ANIMATIONS ===== */
+  .fade-in {
+    animation: fadeIn 0.6s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide-up {
+    animation: slideUp 0.5s ease forwards;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== TWO COLUMN LAYOUT ===== */
+  .two-col {
+    display: flex;
+    gap: 40px;
+    flex: 1;
+    align-items: center;
+  }
+
+  .two-col .col-text { flex: 1; }
+  .two-col .col-visual { flex: 1; }
+
+  .bullet-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .bullet-list li {
+    padding: 8px 0;
+    font-size: 16px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.4;
+  }
+
+  .bullet-list li .bullet {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(37, 99, 235, 0.15);
+    color: var(--primary-light);
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  /* ===== SCORE CIRCLE ===== */
+  .score-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 900;
+    margin: 0 auto;
+  }
+
+  /* ===== NARRATION INDICATOR ===== */
+  #narration-indicator {
+    position: fixed;
+    bottom: 80px;
+    right: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+    transition: opacity 0.3s;
+  }
+
+  .speaking-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    animation: blink 1s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* responsive */
+  @media (max-width: 1200px) {
+    .feature-grid { grid-template-columns: repeat(2, 1fr); }
+    .slide { padding: 30px 40px; }
+    .slide-title { font-size: 36px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar" style="width: 0%"></div>
+<div id="timer">00:00 / ~10:00</div>
+
+<!-- ===== SLIDE 1: INTRO ===== -->
+<div id="slideshow">
+
+<div class="slide" data-narration="Bienvenidos a la demo de Landing System versión 2. Un sistema completo de landing pages que supera a Unbounce, Instapage, Leadpages y HubSpot. En los próximos 10 minutos les mostraré las 8 nuevas funcionalidades que hacen de Landing System la plataforma más completa del mercado. Todo esto con un modelo freemium, donde las features que los competidores cobran entre 250 y 800 dólares al mes, nosotros las incluimos gratis.">
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+    <div class="section-label">Demo Interactiva — v2.0</div>
+    <h1 class="slide-title" style="font-size:64px; max-width:800px;">
+      Landing<span class="highlight">System</span> v2
+    </h1>
+    <p class="slide-subtitle" style="text-align:center; max-width:600px; margin-top:16px;">
+      El sistema de landing pages que supera a los 4 líderes del mercado
+    </p>
+    <div class="stats-row" style="margin-top:40px; max-width:800px;">
+      <div class="stat-card"><div class="number">19</div><div class="label">Componentes</div></div>
+      <div class="stat-card"><div class="number">8</div><div class="label">Nuevas Funcionalidades</div></div>
+      <div class="stat-card"><div class="number">34</div><div class="label">Archivos Nuevos</div></div>
+      <div class="stat-card"><div class="number">3.592</div><div class="label">Líneas de Código</div></div>
+    </div>
+    <div style="margin-top:40px; display:flex; gap:16px; flex-wrap:wrap; justify-content:center;">
+      <span style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; padding:6px 16px; font-size:13px; color:var(--text-muted);">Next.js 15</span>
+      <span style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; padding:6px 16px; font-size:13px; color:var(--text-muted);">React 19</span>
+      <span style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; padding:6px 16px; font-size:13px; color:var(--text-muted);">TypeScript</span>
+      <span style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; padding:6px 16px; font-size:13px; color:var(--text-muted);">Prisma + PostgreSQL</span>
+      <span style="background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; padding:6px 16px; font-size:13px; color:var(--text-muted);">Tailwind 4</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 2: COMPETITIVE LANDSCAPE ===== -->
+<div class="slide" data-narration="Antes de ver las funcionalidades, hablemos del mercado. Unbounce cobra 249 dólares al mes y ofrece Smart Traffic y A B testing. Instapage cobra 299 dólares por heatmaps y personalización. Leadpages cobra 99 dólares por templates y checkout. Y HubSpot cobra más de 800 dólares por smart content y formularios avanzados. Landing System versión 2 incluye TODAS estas funcionalidades. Y las más caras, como los heatmaps y la inteligencia artificial, las ofrecemos de forma gratuita con el modelo trae tu propia clave API.">
+  <div class="section-label">Análisis Competitivo</div>
+  <h1 class="slide-title">Lo que cobran <span class="highlight">ellos</span></h1>
+  <p class="slide-subtitle">Landing System v2 incluye todo lo de los 4 líderes — gratis o con BYOK</p>
+  <div style="overflow-x:auto; margin-top:20px;">
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th class="feature" style="width:200px;">Funcionalidad</th>
+          <th style="text-align:center;">Unbounce<br><span style="font-weight:400;font-size:12px;color:var(--text-muted);">$249/mes</span></th>
+          <th style="text-align:center;">Instapage<br><span style="font-weight:400;font-size:12px;color:var(--text-muted);">$299/mes</span></th>
+          <th style="text-align:center;">Leadpages<br><span style="font-weight:400;font-size:12px;color:var(--text-muted);">$99/mes</span></th>
+          <th style="text-align:center;">HubSpot<br><span style="font-weight:400;font-size:12px;color:var(--text-muted);">$800+/mes</span></th>
+          <th class="us" style="text-align:center;">Landing System<br><span style="font-weight:400;font-size:12px;">GRATIS / BYOK</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="feature">A/B Testing</td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td></tr>
+        <tr><td class="feature">Popups y Barras Fijas</td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td></tr>
+        <tr><td class="feature">Copywriting con IA</td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td></tr>
+        <tr><td class="feature">Texto Dinámico (DTR)</td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td></tr>
+        <tr><td class="feature">Mapas de Calor</td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td></tr>
+        <tr><td class="feature">Formularios Multi-paso</td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td></tr>
+        <tr><td class="feature">Personalización</td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td><td style="text-align:center;"><span class="check">&#10003;</span></td></tr>
+        <tr><td class="feature">Auditoría Accesibilidad</td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="cross">&#10007;</span></td><td style="text-align:center;"><span class="check" style="font-size:18px;">&#10003; ÚNICO</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== SLIDE 3: EDITOR ===== -->
+<div class="slide" data-narration="El corazón del sistema es el editor visual drag and drop. A la izquierda tenemos la paleta con 19 componentes organizados por categoría. En el centro, el canvas con vista responsive para desktop, tablet y móvil. A la derecha, el panel de propiedades con editores tipados para cada campo. Y ahora en la versión 2, hemos añadido un panel de inteligencia artificial integrado. Con un solo clic, cambias entre el panel de propiedades y el panel de IA.">
+  <div class="section-label">Editor Visual</div>
+  <h1 class="slide-title">Editor <span class="highlight">Drag & Drop</span></h1>
+  <p class="slide-subtitle">19 componentes, vista previa responsive, deshacer/rehacer con 50 niveles de historial</p>
+  <div class="mockup-container">
+    <div class="mockup-browser" style="max-width:1000px;">
+      <div class="mockup-titlebar">
+        <div class="mockup-dot red"></div>
+        <div class="mockup-dot yellow"></div>
+        <div class="mockup-dot green"></div>
+        <div class="mockup-url">app.landingsystem.com/editor/cl9x...</div>
+      </div>
+      <div class="editor-toolbar">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:11px; color:var(--text-muted);">&#8592;</span>
+          <span style="font-size:12px; font-weight:700; color:white;">SaaS Launch Page</span>
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--warning);"></span>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <span class="toolbar-btn secondary" style="font-size:10px;">Escritorio</span>
+          <span class="toolbar-btn secondary" style="font-size:10px;">Vista previa</span>
+          <span style="width:1px;height:20px;background:var(--border);"></span>
+          <span class="toolbar-btn secondary" style="font-size:10px;">Props</span>
+          <span class="toolbar-btn purple" style="font-size:10px;">&#10024; IA</span>
+          <span style="width:1px;height:20px;background:var(--border);"></span>
+          <span class="toolbar-btn secondary" style="font-size:10px;">Guardar</span>
+          <span class="toolbar-btn" style="font-size:10px;">Publicar</span>
+        </div>
+      </div>
+      <div class="editor-layout">
+        <div class="editor-sidebar">
+          <div style="font-size:9px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Componentes</div>
+          <div class="palette-item">&#9733; Navegación</div>
+          <div class="palette-item" style="color:var(--primary-light);background:rgba(37,99,235,0.1);">&#10024; Hero</div>
+          <div class="palette-item">&#9638; Características</div>
+          <div class="palette-item">&#9654; Vídeo</div>
+          <div class="palette-item">&#9733; Estadísticas</div>
+          <div class="palette-item">&#10003; Testimonios</div>
+          <div class="palette-item">&#9776; Precios</div>
+          <div class="palette-item">&#9993; Formulario</div>
+          <div class="palette-item" style="color:var(--accent);">&#9998; Form Multi-paso</div>
+          <div class="palette-item">&#63; FAQ</div>
+          <div class="palette-item">&#9135; Separador</div>
+          <div class="palette-item">&#9881; Pie de página</div>
+          <div style="font-size:9px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin:12px 0 8px;">Capas</div>
+          <div class="palette-item" style="font-size:10px;">1. Hero &#8645;</div>
+          <div class="palette-item" style="font-size:10px;">2. Features &#8645;</div>
+          <div class="palette-item" style="font-size:10px;">3. CTA &#8645;</div>
+        </div>
+        <div class="editor-canvas">
+          <div class="canvas-hero highlighted">
+            <h1>Lanza tu SaaS <br>en {{keyword}}</h1>
+            <p>La forma más rápida de pasar de idea a clientes de pago</p>
+            <div class="btn">Empieza Gratis</div>
+          </div>
+          <div class="canvas-features">
+            <h2>Por qué Elegirnos</h2>
+            <div class="features-row">
+              <div class="feature-mini"><div class="dot">&#9889;</div><h4>Rápido</h4><p>Carga instantánea</p></div>
+              <div class="feature-mini"><div class="dot">&#128274;</div><h4>Seguro</h4><p>Nivel bancario</p></div>
+              <div class="feature-mini"><div class="dot">&#128200;</div><h4>Analítica</h4><p>Integrada</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="editor-props">
+          <div style="font-size:9px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Propiedades</div>
+          <div style="font-size:10px; color:var(--primary-light); margin-bottom:12px;">Hero &mdash; Centrado</div>
+          <div class="prop-label">Variante</div>
+          <select class="prop-input"><option>Centrado</option></select>
+          <div class="prop-label">Título</div>
+          <input class="prop-input" value="Lanza tu SaaS en {{keyword}}">
+          <div class="prop-label">Subtítulo</div>
+          <input class="prop-input" value="La forma más rápida de...">
+          <div class="prop-label">Texto CTA</div>
+          <input class="prop-input" value="Empieza Gratis">
+          <div class="prop-label">URL del CTA</div>
+          <input class="prop-input" value="#precios">
+          <div class="prop-label" style="color:var(--accent);">&#128204; Dinámico: keyword</div>
+          <input class="prop-input" value="Minutos" style="border-color:var(--accent);">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 4: A/B TESTING ===== -->
+<div class="slide" data-narration="La primera feature clave es el sistema de A B testing completo. Puedes crear experimentos con múltiples variantes, asignar porcentajes de tráfico a cada una, y medir conversiones automáticamente. El sistema usa cookies para mantener la asignación consistente por visitante. En el dashboard puedes ver las métricas en tiempo real: visitantes únicos, conversiones, tasa de conversión y el lift respecto a la variante control. Todo esto sin necesidad de herramientas externas como Google Optimize, que por cierto Google discontinuó.">
+  <div class="section-label">Feature 1</div>
+  <h1 class="slide-title">A/B <span class="highlight">Testing</span></h1>
+  <div class="two-col">
+    <div class="col-text">
+      <p class="slide-subtitle" style="margin-bottom:20px;">Experimentos completos con variantes, peso de tráfico y métricas de conversión en tiempo real</p>
+      <ul class="bullet-list">
+        <li><span class="bullet">1</span> Crea variantes con diferentes contenidos por sección</li>
+        <li><span class="bullet">2</span> Asigna peso de tráfico (50/50, 70/30, etc.)</li>
+        <li><span class="bullet">3</span> Asignación por cookie — visitante siempre ve la misma variante</li>
+        <li><span class="bullet">4</span> Seguimiento automático: vistas, conversiones, clics, rebote</li>
+        <li><span class="bullet">5</span> Panel con lift vs control y tasa de conversión</li>
+      </ul>
+    </div>
+    <div class="col-visual">
+      <div class="mockup-browser">
+        <div class="mockup-titlebar">
+          <div class="mockup-dot red"></div><div class="mockup-dot yellow"></div><div class="mockup-dot green"></div>
+          <div class="mockup-url">dashboard/experiments/cl9x...</div>
+        </div>
+        <div class="mockup-content" style="padding:20px;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
+            <div><span style="font-size:14px;font-weight:700;">Test A/B Página Principal</span><br><span style="font-size:11px;color:var(--text-muted);">Estado: <span style="color:var(--success);">ACTIVO</span></span></div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px;">
+            <div class="dash-card"><div style="font-size:20px;font-weight:900;color:var(--primary-light);">1.847</div><p>Visitantes</p></div>
+            <div class="dash-card"><div style="font-size:20px;font-weight:900;color:var(--success);">234</div><p>Conversiones</p></div>
+            <div class="dash-card"><div style="font-size:20px;font-weight:900;">12,67%</div><p>Tasa Conv. Media</p></div>
+            <div class="dash-card"><div style="font-size:20px;font-weight:900;color:var(--success);">Variante B</div><p>Ganadora</p></div>
+          </div>
+          <table style="width:100%;font-size:11px;border-collapse:collapse;">
+            <tr style="color:var(--text-muted);border-bottom:1px solid var(--border);"><td style="padding:6px 0;">Variante</td><td>Tráfico</td><td>Visitantes</td><td>Conv.</td><td>Tasa</td><td>Lift</td></tr>
+            <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 0;">A (Control) <span style="background:rgba(37,99,235,0.2);padding:1px 6px;border-radius:4px;font-size:9px;color:var(--primary-light);">Control</span></td><td>50%</td><td>924</td><td>98</td><td>10,61%</td><td style="color:var(--text-muted);">Base</td></tr>
+            <tr><td style="padding:8px 0;">B (Nuevo Hero)</td><td>50%</td><td>923</td><td>136</td><td style="font-weight:700;">14,73%</td><td style="color:var(--success);font-weight:700;">+38,8%</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 5: POPUPS ===== -->
+<div class="slide" data-narration="La segunda feature son los popups y sticky bars. Tenemos 4 tipos: modal centrado, slide-in desde una esquina, sticky bar fijo en la parte superior, y fullscreen. El motor de triggers soporta exit intent, que detecta cuando el ratón sale de la ventana, porcentaje de scroll, un temporizador, o al cargar la página. El targeting permite mostrar una sola vez, una vez por sesión, o siempre, y filtrar por tipo de dispositivo. Todo esto con métricas de impressions, clicks y conversiones.">
+  <div class="section-label">Feature 2</div>
+  <h1 class="slide-title">Popups & <span class="highlight">Sticky Bars</span></h1>
+  <div class="two-col">
+    <div class="col-text">
+      <p class="slide-subtitle" style="margin-bottom:20px;">4 tipos de popup con motor de triggers inteligente</p>
+      <ul class="bullet-list">
+        <li><span class="bullet">&#9632;</span> <strong>Modal</strong> — popup centrado clásico</li>
+        <li><span class="bullet">&#9654;</span> <strong>Slide-in</strong> — aparece desde una esquina</li>
+        <li><span class="bullet">&#9135;</span> <strong>Barra Fija</strong> — barra superior/inferior persistente</li>
+        <li><span class="bullet">&#9635;</span> <strong>Pantalla Completa</strong> — takeover total</li>
+      </ul>
+      <p style="font-size:14px;color:var(--text-muted);margin-top:16px;">Disparadores: intención de salida, scroll %, temporizador, carga de página<br>Segmentación: frecuencia, dispositivo, páginas</p>
+    </div>
+    <div class="col-visual">
+      <div class="mockup-browser">
+        <div class="mockup-titlebar">
+          <div class="mockup-dot red"></div><div class="mockup-dot yellow"></div><div class="mockup-dot green"></div>
+          <div class="mockup-url">landingsystem.com/p/mi-landing</div>
+        </div>
+        <div class="mockup-content" style="min-height:300px;background:#f8fafc;position:relative;">
+          <!-- Simulated landing behind -->
+          <div style="text-align:center; padding:30px 20px; opacity:0.3;">
+            <h2 style="color:#1f2937;font-size:18px;font-weight:800;">Tu Landing Page</h2>
+            <p style="color:#6b7280;font-size:12px;">Contenido del sitio...</p>
+          </div>
+          <!-- Popup overlay -->
+          <div class="popup-overlay">
+            <div class="popup-modal">
+              <div class="close-btn">&times;</div>
+              <div style="font-size:32px;margin-bottom:8px;">&#127873;</div>
+              <h3>Espera! Antes de irte...</h3>
+              <p>Consigue un 15% de descuento en tu primer pedido</p>
+              <input style="width:80%;padding:8px 12px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;margin-bottom:10px;" placeholder="tu@email.com">
+              <div class="popup-cta">Quiero mi descuento</div>
+              <p style="font-size:10px;margin-top:8px;color:#9ca3af;">Trigger: exit-intent | Freq: once</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 6: AI COPYWRITING ===== -->
+<div class="slide" data-narration="La tercera feature es el copywriter de inteligencia artificial con modelo trae tu propia API key. Soportamos 3 proveedores: OpenAI con GPT 4o, Anthropic con Claude, y Google con Gemini. El panel de IA está integrado directamente en el editor. Seleccionas el tipo de contenido que quieres, headline, descripción, llamada a la acción, o una sección completa, eliges el tono y la industria, y generas contenido en un clic. Luego lo aplicas directamente a la sección seleccionada. Unbounce cobra 249 dólares por esta funcionalidad. Nosotros la ofrecemos gratis, solo necesitas tu propia API key.">
+  <div class="section-label">Feature 3</div>
+  <h1 class="slide-title"><span class="ai-sparkle">&#10024;</span> Copywriting con IA <span class="highlight">BYOK</span></h1>
+  <div class="two-col">
+    <div class="col-text">
+      <p class="slide-subtitle" style="margin-bottom:20px;">3 proveedores de IA, integrado en el editor. Genera titulares, CTAs y secciones completas</p>
+      <div style="display:flex;gap:12px;margin-bottom:20px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px;flex:1;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">&#129302;</div>
+          <div style="font-size:12px;font-weight:700;">OpenAI</div>
+          <div style="font-size:10px;color:var(--text-muted);">GPT-4o</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px;flex:1;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">&#9889;</div>
+          <div style="font-size:12px;font-weight:700;">Anthropic</div>
+          <div style="font-size:10px;color:var(--text-muted);">Claude</div>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px;flex:1;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">&#128161;</div>
+          <div style="font-size:12px;font-weight:700;">Google</div>
+          <div style="font-size:10px;color:var(--text-muted);">Gemini</div>
+        </div>
+      </div>
+      <ul class="bullet-list">
+        <li><span class="bullet">&#10024;</span> Genera titulares, descripciones, CTAs</li>
+        <li><span class="bullet">&#10024;</span> Secciones completas con un prompt</li>
+        <li><span class="bullet">&#10024;</span> 6 tonos: Profesional, Casual, Urgente, Amigable, Audaz, Minimalista</li>
+        <li><span class="bullet">&#10024;</span> Aplica directo a la sección seleccionada</li>
+      </ul>
+    </div>
+    <div class="col-visual">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:320px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="color:var(--accent);font-size:18px;">&#10024;</span>
+          <span style="font-size:13px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">Copywriter IA</span>
+        </div>
+        <div class="prop-label">Proveedor</div>
+        <select class="prop-input"><option>OpenAI (GPT-4o)</option></select>
+        <div class="prop-label">Generar</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:10px;">
+          <span style="background:rgba(124,58,237,0.15);color:var(--accent);padding:4px 8px;border-radius:6px;font-size:10px;font-weight:600;text-align:center;">Titular</span>
+          <span style="background:rgba(255,255,255,0.05);color:var(--text-muted);padding:4px 8px;border-radius:6px;font-size:10px;text-align:center;">Descripción</span>
+          <span style="background:rgba(255,255,255,0.05);color:var(--text-muted);padding:4px 8px;border-radius:6px;font-size:10px;text-align:center;">CTA</span>
+          <span style="background:rgba(255,255,255,0.05);color:var(--text-muted);padding:4px 8px;border-radius:6px;font-size:10px;text-align:center;">Sección Completa</span>
+        </div>
+        <div class="prop-label">Tono</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;">
+          <span style="background:rgba(124,58,237,0.15);color:var(--accent);padding:3px 10px;border-radius:20px;font-size:10px;">Profesional</span>
+          <span style="background:rgba(255,255,255,0.05);color:var(--text-muted);padding:3px 10px;border-radius:20px;font-size:10px;">Casual</span>
+          <span style="background:rgba(255,255,255,0.05);color:var(--text-muted);padding:3px 10px;border-radius:20px;font-size:10px;">Urgente</span>
+        </div>
+        <div class="prop-label">Describe lo que quieres</div>
+        <div class="prop-input" style="height:60px;padding:8px;font-size:10px;color:white;">Un titular para una herramienta SaaS de gestión de proyectos para startups...</div>
+        <div style="background:var(--accent);color:white;text-align:center;padding:8px;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:12px;cursor:pointer;">&#10024; Generar con IA</div>
+        <div style="background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.2);border-radius:10px;padding:12px;">
+          <div style="font-size:10px;color:var(--accent);margin-bottom:6px;font-weight:600;">Generado:</div>
+          <div style="font-size:13px;font-weight:600;color:white;">"Lanza Productos 10x Más Rápido con Gestión de Proyectos Potenciada por IA"</div>
+          <div style="display:flex;gap:6px;margin-top:8px;">
+            <span style="background:var(--accent);color:white;padding:3px 10px;border-radius:6px;font-size:9px;font-weight:600;">Aplicar</span>
+            <span style="background:rgba(255,255,255,0.05);color:var(--text-muted);padding:3px 10px;border-radius:6px;font-size:9px;">Copiar</span>
+            <span style="background:rgba(255,255,255,0.05);color:var(--text-muted);padding:3px 10px;border-radius:6px;font-size:9px;">Regenerar</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 7: DTR ===== -->
+<div class="slide" data-narration="La cuarta feature es Dynamic Text Replacement, o DTR. Esta es la clave para mejorar el Quality Score de Google Ads. Defines variables en el contenido con doble llave, como keyword, location o utm campaign. Cuando un visitante llega con parámetros en la URL, el texto se sustituye automáticamente en tiempo real. Por ejemplo, si tu anuncio de Google apunta a tu landing con el parámetro keyword igual a Vigo, el título cambia de Servicios en tu ciudad a Servicios en Vigo. Esto mejora la relevancia del anuncio y reduce el coste por clic.">
+  <div class="section-label">Feature 4</div>
+  <h1 class="slide-title">Dynamic Text <span class="highlight">Replacement</span></h1>
+  <div class="two-col">
+    <div class="col-text">
+      <p class="slide-subtitle" style="margin-bottom:20px;">Mejora el Quality Score de Google Ads con sustitución automática de texto</p>
+      <ul class="bullet-list">
+        <li><span class="bullet">{}</span> Variables: <code style="color:var(--primary-light);">{{keyword}}</code>, <code style="color:var(--primary-light);">{{location}}</code>, <code style="color:var(--primary-light);">{{utm_campaign}}</code></li>
+        <li><span class="bullet">&#127760;</span> Sustitución en tiempo real desde parámetros URL</li>
+        <li><span class="bullet">&#128203;</span> Valores por defecto configurables en el editor</li>
+        <li><span class="bullet">&#128640;</span> Funciona con TODOS los componentes</li>
+        <li><span class="bullet">&#128176;</span> Reduce CPC en Google/Meta Ads</li>
+      </ul>
+    </div>
+    <div class="col-visual">
+      <div style="space-y:12px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">
+          <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">URL del anuncio de Google Ads:</div>
+          <div style="font-family:monospace;font-size:12px;color:var(--primary-light);background:rgba(0,0,0,0.3);padding:8px 12px;border-radius:8px;word-break:break-all;">
+            landingsystem.com/p/servicios?<span style="color:var(--warning);">keyword</span>=Vigo&amp;<span style="color:var(--success);">utm_campaign</span>=verano2026
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;">
+          <div style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;">
+            <div style="font-size:10px;color:var(--danger);margin-bottom:8px;font-weight:700;">ANTES (Plantilla)</div>
+            <div style="font-size:16px;font-weight:700;color:white;">Servicios en <span style="background:rgba(239,68,68,0.2);padding:2px 6px;border-radius:4px;color:var(--danger);">{{keyword}}</span></div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Campaña: <span style="background:rgba(239,68,68,0.2);padding:2px 6px;border-radius:4px;color:var(--danger);">{{utm_campaign}}</span></div>
+          </div>
+          <div style="display:flex;align-items:center;font-size:24px;color:var(--text-muted);">&#8594;</div>
+          <div style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;">
+            <div style="font-size:10px;color:var(--success);margin-bottom:8px;font-weight:700;">DESPUÉS (Renderizado)</div>
+            <div style="font-size:16px;font-weight:700;color:white;">Servicios en <span style="background:rgba(16,185,129,0.2);padding:2px 6px;border-radius:4px;color:var(--success);">Vigo</span></div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Campaña: <span style="background:rgba(16,185,129,0.2);padding:2px 6px;border-radius:4px;color:var(--success);">verano2026</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 8: HEATMAPS ===== -->
+<div class="slide" data-narration="La quinta feature son los heatmaps y analytics avanzados integrados. Instapage cobra 299 dólares al mes por esto, nosotros lo incluimos gratis. Registramos cada clic con coordenadas normalizadas, el scroll depth por percentiles, y las sesiones de visitantes con dispositivo, referrer y parámetros UTM. En el dashboard puedes alternar entre el mapa de clics y el mapa de scroll depth, ver los visitantes únicos y el comportamiento promedio. Todo renderizado en un canvas HTML5 sin dependencias externas.">
+  <div class="section-label">Feature 5</div>
+  <h1 class="slide-title">Mapas de Calor y <span class="highlight">Analítica</span></h1>
+  <div class="two-col">
+    <div class="col-text">
+      <p class="slide-subtitle" style="margin-bottom:20px;">Instapage cobra $299/mes por esto. Nosotros lo incluimos gratis.</p>
+      <ul class="bullet-list">
+        <li><span class="bullet" style="background:rgba(239,68,68,0.15);color:var(--danger);">&#128293;</span> Click tracking con coordenadas normalizadas</li>
+        <li><span class="bullet" style="background:rgba(16,185,129,0.15);color:var(--success);">&#128200;</span> Scroll depth por percentiles (0-100%)</li>
+        <li><span class="bullet" style="background:rgba(37,99,235,0.15);color:var(--primary-light);">&#128100;</span> Visitor sessions: device, referrer, UTMs</li>
+        <li><span class="bullet" style="background:rgba(245,158,11,0.15);color:var(--warning);">&#127912;</span> Canvas HTML5 heatmap visualization</li>
+        <li><span class="bullet">&#128230;</span> Batch tracking: flush cada 5s o 20 eventos</li>
+      </ul>
+    </div>
+    <div class="col-visual">
+      <div class="mockup-browser">
+        <div class="mockup-titlebar">
+          <div class="mockup-dot red"></div><div class="mockup-dot yellow"></div><div class="mockup-dot green"></div>
+          <div class="mockup-url">dashboard/heatmaps</div>
+        </div>
+        <div class="mockup-content" style="padding:16px;">
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <select class="prop-input" style="width:auto;margin:0;font-size:11px;"><option>SaaS Launch Page</option></select>
+            <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;">
+              <span style="background:var(--primary);color:white;padding:4px 12px;font-size:11px;font-weight:600;">Mapa de Clics</span>
+              <span style="background:var(--bg-card);color:var(--text-muted);padding:4px 12px;font-size:11px;">Scroll</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">
+            <div class="dash-card" style="padding:10px;"><div style="font-size:16px;font-weight:900;color:var(--primary-light);">482</div><p>Visitantes</p></div>
+            <div class="dash-card" style="padding:10px;"><div style="font-size:16px;font-weight:900;color:var(--danger);">2.847</div><p>Clics</p></div>
+            <div class="dash-card" style="padding:10px;"><div style="font-size:16px;font-weight:900;color:var(--success);">67%</div><p>Scroll Medio</p></div>
+          </div>
+          <!-- Heatmap visualization -->
+          <div style="background:#f8fafc;border-radius:8px;height:160px;position:relative;overflow:hidden;">
+            <div style="text-align:center;padding:20px;opacity:0.2;color:#1f2937;font-size:14px;font-weight:700;">Vista Previa de la Landing</div>
+            <div class="heatmap-dot" style="width:40px;height:40px;background:radial-gradient(circle,rgba(255,0,0,0.6),rgba(255,165,0,0.2),transparent);top:20px;left:45%;"></div>
+            <div class="heatmap-dot" style="width:60px;height:60px;background:radial-gradient(circle,rgba(255,0,0,0.8),rgba(255,165,0,0.3),transparent);top:50px;left:42%;"></div>
+            <div class="heatmap-dot" style="width:30px;height:30px;background:radial-gradient(circle,rgba(255,0,0,0.4),rgba(255,165,0,0.1),transparent);top:80px;left:30%;"></div>
+            <div class="heatmap-dot" style="width:50px;height:50px;background:radial-gradient(circle,rgba(255,0,0,0.7),rgba(255,165,0,0.2),transparent);top:40px;left:60%;"></div>
+            <div class="heatmap-dot" style="width:35px;height:35px;background:radial-gradient(circle,rgba(255,0,0,0.5),rgba(255,165,0,0.15),transparent);top:100px;left:50%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 9: MULTI-STEP FORMS ===== -->
+<div class="slide" data-narration="La sexta feature son los formularios multi-paso con progressive profiling. HubSpot cobra más de 800 dólares al mes por esto. Nuestro componente Multi Step Form soporta pasos configurables con título y descripción, campos con validación en tiempo real, lógica condicional para mostrar u ocultar campos según respuestas anteriores, y progressive profiling, que detecta al visitante por cookie y oculta campos que ya respondió en visitas anteriores. Esto reduce la fricción y mejora las tasas de conversión de forma dramática.">
+  <div class="section-label">Feature 6</div>
+  <h1 class="slide-title">Multi-Step Forms + <span class="highlight">Progressive Profiling</span></h1>
+  <div class="two-col">
+    <div class="col-text">
+      <p class="slide-subtitle" style="margin-bottom:20px;">HubSpot cobra $800+/mes por esto. Nosotros lo incluimos gratis.</p>
+      <ul class="bullet-list">
+        <li><span class="bullet">1</span> Pasos configurables con título y descripción</li>
+        <li><span class="bullet">2</span> 10 tipos de campo: texto, email, teléfono, selector, checkbox, radio...</li>
+        <li><span class="bullet">3</span> Validación en tiempo real (patrón, mín/máx, obligatorio)</li>
+        <li><span class="bullet">4</span> Lógica condicional: mostrar/ocultar según respuestas</li>
+        <li><span class="bullet">5</span> Perfilado progresivo: detecta visitante por cookie, oculta campos ya respondidos</li>
+        <li><span class="bullet">6</span> Guardado parcial: cada paso se envía al servidor</li>
+      </ul>
+    </div>
+    <div class="col-visual">
+      <div style="background:white;border-radius:16px;padding:24px;max-width:360px;box-shadow:0 20px 40px rgba(0,0,0,0.3);">
+        <!-- Progress bar -->
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#6b7280;margin-bottom:4px;">
+          <span>Paso 2 de 3</span><span>67%</span>
+        </div>
+        <div style="height:6px;background:#e5e7eb;border-radius:99px;margin-bottom:16px;">
+          <div style="height:100%;width:67%;background:linear-gradient(90deg,#2563eb,#7c3aed);border-radius:99px;"></div>
+        </div>
+        <h3 style="color:#1f2937;font-size:16px;font-weight:700;margin-bottom:4px;">Tu Empresa</h3>
+        <p style="color:#6b7280;font-size:12px;margin-bottom:16px;">Ayúdanos a entender tus necesidades</p>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px;font-weight:600;color:#374151;display:block;margin-bottom:3px;">Empresa <span style="color:var(--danger);">*</span></label>
+          <input style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:12px;" value="Redegal">
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:11px;font-weight:600;color:#374151;display:block;margin-bottom:3px;">Tamaño del Equipo</label>
+          <select style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:8px;font-size:12px;background:white;">
+            <option>10-50 empleados</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="font-size:11px;font-weight:600;color:#374151;display:block;margin-bottom:3px;">Rango de Presupuesto</label>
+          <div style="display:flex;gap:8px;">
+            <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#374151;"><input type="radio" name="budget" checked> $1K-5K</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#374151;"><input type="radio" name="budget"> $5K-20K</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#374151;"><input type="radio" name="budget"> $20K+</label>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <button style="background:#f3f4f6;border:none;padding:8px 20px;border-radius:8px;font-size:12px;color:#374151;font-weight:600;cursor:pointer;">Atrás</button>
+          <button style="background:#2563eb;border:none;padding:8px 20px;border-radius:8px;font-size:12px;color:white;font-weight:600;cursor:pointer;">Siguiente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 10: PERSONALIZATION ===== -->
+<div class="slide" data-narration="La séptima feature es el motor de personalización. Similar al Smart Content de HubSpot, pero sin lock-in. Defines reglas con condiciones como fuente UTM, tipo de dispositivo, referrer, si es visitante recurrente, día de la semana o franja horaria. Cada regla tiene acciones: mostrar u ocultar secciones, reemplazar texto o imágenes, o redirigir a otra URL. Las reglas se evalúan en el cliente con prioridades, y se pueden combinar con lógica AND u OR.">
+  <div class="section-label">Feature 7</div>
+  <h1 class="slide-title">Motor de <span class="highlight">Personalización</span></h1>
+  <div class="two-col">
+    <div class="col-text">
+      <p class="slide-subtitle" style="margin-bottom:20px;">HubSpot Smart Content — sin lock-in, evaluación en el navegador</p>
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;">Condiciones disponibles:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+        <span style="background:var(--bg-card);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:11px;">utm_source</span>
+        <span style="background:var(--bg-card);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:11px;">utm_campaign</span>
+        <span style="background:var(--bg-card);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:11px;">dispositivo</span>
+        <span style="background:var(--bg-card);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:11px;">referrer</span>
+        <span style="background:var(--bg-card);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:11px;">visitante_recurrente</span>
+        <span style="background:var(--bg-card);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:11px;">día_semana</span>
+        <span style="background:var(--bg-card);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:11px;">franja_horaria</span>
+        <span style="background:var(--bg-card);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:11px;">país</span>
+        <span style="background:var(--bg-card);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:11px;">url_param</span>
+        <span style="background:var(--bg-card);border:1px solid var(--border);padding:4px 10px;border-radius:6px;font-size:11px;">cookie</span>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;">Acciones:</div>
+      <ul class="bullet-list">
+        <li><span class="bullet">&#128065;</span> mostrar_sección / ocultar_sección</li>
+        <li><span class="bullet">&#9998;</span> reemplazar_texto / reemplazar_imagen</li>
+        <li><span class="bullet">&#8594;</span> redirigir a otra URL</li>
+      </ul>
+    </div>
+    <div class="col-visual">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:20px;">
+        <h4 style="font-size:14px;font-weight:700;margin-bottom:12px;">Regla: "Visitante de Google Ads"</h4>
+        <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px;margin-bottom:12px;">
+          <div style="font-size:10px;color:var(--text-muted);font-weight:600;margin-bottom:6px;">SI (Y)</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:12px;">
+            <span style="background:rgba(37,99,235,0.2);color:var(--primary-light);padding:2px 8px;border-radius:4px;">utm_source</span>
+            <span style="color:var(--text-muted);">equals</span>
+            <span style="color:var(--success);font-weight:600;">"google"</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:12px;">
+            <span style="background:rgba(37,99,235,0.2);color:var(--primary-light);padding:2px 8px;border-radius:4px;">device</span>
+            <span style="color:var(--text-muted);">equals</span>
+            <span style="color:var(--success);font-weight:600;">"mobile"</span>
+          </div>
+        </div>
+        <div style="background:rgba(0,0,0,0.2);border-radius:10px;padding:12px;">
+          <div style="font-size:10px;color:var(--text-muted);font-weight:600;margin-bottom:6px;">ENTONCES</div>
+          <div style="font-size:12px;margin-bottom:4px;">&#128065; <span style="color:var(--danger);">Ocultar</span> sección: "CTA Desktop"</div>
+          <div style="font-size:12px;margin-bottom:4px;">&#9998; <span style="color:var(--success);">Reemplazar</span> hero.título: "Descarga la App"</div>
+          <div style="font-size:12px;">&#9998; <span style="color:var(--success);">Reemplazar</span> hero.ctaTexto: "Instalar Ahora"</div>
+        </div>
+        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:11px;color:var(--text-muted);">Prioridad: 10</span>
+          <span style="background:rgba(16,185,129,0.15);color:var(--success);padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;">Activa</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 11: ACCESSIBILITY ===== -->
+<div class="slide" data-narration="La octava y última feature es el Audit de Accesibilidad. Y esto es una innovación única: ningún competidor lo tiene. Landing System analiza automáticamente cada sección buscando problemas de accesibilidad según el estándar WCAG 2.1 doble A. Revisa el contraste de colores, texto alternativo en imágenes, jerarquía de headings, etiquetas de formularios, texto de enlaces y accesibilidad de videos. Cada auditoría genera un score de 0 a 100 y sugerencias automáticas de corrección. Esto no solo mejora la experiencia de usuario, también es un requisito legal en la Unión Europea y Estados Unidos.">
+  <div class="section-label">Feature 8 — Innovación Única</div>
+  <h1 class="slide-title">Auditoría de <span class="highlight">Accesibilidad</span></h1>
+  <div class="two-col">
+    <div class="col-text">
+      <p class="slide-subtitle" style="margin-bottom:20px;">WCAG 2.1 AA — Nadie más lo tiene. Requisito legal en UE y EE.UU.</p>
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;">6 reglas auditadas:</div>
+      <ul class="bullet-list">
+        <li><span class="bullet" style="background:rgba(239,68,68,0.15);color:var(--danger);">!</span> <strong>Contraste de color</strong> — ratio mínimo 4.5:1</li>
+        <li><span class="bullet" style="background:rgba(239,68,68,0.15);color:var(--danger);">!</span> <strong>Texto alt en imágenes</strong> — fotos, galerías, logos</li>
+        <li><span class="bullet" style="background:rgba(245,158,11,0.15);color:var(--warning);">?</span> <strong>Jerarquía de encabezados</strong> — H1 > H2 > H3 sin saltos</li>
+        <li><span class="bullet" style="background:rgba(245,158,11,0.15);color:var(--warning);">?</span> <strong>Etiquetas de formularios</strong> — texto del botón enviar</li>
+        <li><span class="bullet" style="background:rgba(245,158,11,0.15);color:var(--warning);">?</span> <strong>Texto de enlaces</strong> — no "pulsa aquí" genérico</li>
+        <li><span class="bullet" style="background:rgba(37,99,235,0.15);color:var(--primary-light);">i</span> <strong>Subtítulos de vídeo</strong> — subtítulos o transcripción</li>
+      </ul>
+    </div>
+    <div class="col-visual">
+      <div class="mockup-browser">
+        <div class="mockup-titlebar">
+          <div class="mockup-dot red"></div><div class="mockup-dot yellow"></div><div class="mockup-dot green"></div>
+          <div class="mockup-url">dashboard/accessibility</div>
+        </div>
+        <div class="mockup-content" style="padding:20px;">
+          <div style="display:flex;align-items:center;gap:20px;margin-bottom:16px;">
+            <div class="score-circle" style="background:rgba(16,185,129,0.15);color:var(--success);width:80px;height:80px;font-size:28px;">85</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;">Puntuación de Accesibilidad</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">
+                <span style="color:var(--danger);">1 error</span> &middot;
+                <span style="color:var(--warning);">2 avisos</span> &middot;
+                <span style="color:var(--success);">4/6 reglas superadas</span>
+              </div>
+            </div>
+          </div>
+          <div style="border-top:1px solid var(--border);padding-top:12px;">
+            <div style="font-size:12px;font-weight:700;margin-bottom:8px;">Problemas Encontrados</div>
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+              <span style="background:var(--danger);color:white;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">!</span>
+              <div>
+                <div style="font-size:11px;font-weight:600;">Imagen en "hero" sin texto alternativo</div>
+                <div style="font-size:10px;color:var(--text-muted);">Regla: img-alt</div>
+                <div style="font-size:10px;color:var(--primary-light);background:rgba(37,99,235,0.08);padding:4px 8px;border-radius:6px;margin-top:4px;">Solución: Añadir texto alt descriptivo para lectores de pantalla</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;">
+              <span style="background:var(--warning);color:white;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;">?</span>
+              <div>
+                <div style="font-size:11px;font-weight:600;">Texto genérico "Pulsa aquí" en enlace CTA</div>
+                <div style="font-size:10px;color:var(--text-muted);">Regla: link-text</div>
+                <div style="font-size:10px;color:var(--primary-light);background:rgba(37,99,235,0.08);padding:4px 8px;border-radius:6px;margin-top:4px;">Solución: Usar texto descriptivo que explique la acción</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 12: ARCHITECTURE ===== -->
+<div class="slide" data-narration="Veamos la arquitectura técnica. Landing System versión 2 está construido con Next.js 15, React 19, TypeScript y Tailwind 4. El editor usa dnd-kit para drag and drop, Zustand con Zundo para el estado con undo redo de 50 niveles. La base de datos es PostgreSQL con Prisma como ORM, que ahora tiene 22 modelos. La autenticación es NextAuth con JWT y soporte multi-tenant por empresa. Toda la seguridad es bank-grade: CSP, CSRF, rate limiting, sanitización HTML y audit logging. Tenemos 45 rutas de API, 9 templates pre-construidos, y 7 adaptadores de analytics.">
+  <div class="section-label">Arquitectura</div>
+  <h1 class="slide-title">Stack <span class="highlight">Técnico</span></h1>
+  <div class="feature-grid" style="grid-template-columns:repeat(3, 1fr);">
+    <div class="feature-card">
+      <div class="icon" style="background:rgba(37,99,235,0.15); color:var(--primary-light);">&#9881;</div>
+      <h3>Frontend</h3>
+      <p>Next.js 15 App Router, React 19, TypeScript, Tailwind 4, Framer Motion</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon" style="background:rgba(16,185,129,0.15); color:var(--success);">&#128451;</div>
+      <h3>Base de Datos</h3>
+      <p>PostgreSQL + Prisma 6.2, 22 modelos, columnas JSON, multi-tenant</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon" style="background:rgba(124,58,237,0.15); color:var(--accent);">&#128274;</div>
+      <h3>Auth y Seguridad</h3>
+      <p>NextAuth 5 JWT, CSP, CSRF, rate-limit, sanitización, audit log</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon" style="background:rgba(245,158,11,0.15); color:var(--warning);">&#128640;</div>
+      <h3>Editor</h3>
+      <p>@dnd-kit drag&drop, Zustand + Zundo (50 history), responsive canvas</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon" style="background:rgba(239,68,68,0.15); color:var(--danger);">&#128200;</div>
+      <h3>Analítica</h3>
+      <p>7 adaptadores: GA4, GTM, Facebook, LinkedIn, TikTok, Adobe, Binnacle</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon" style="background:rgba(16,185,129,0.15); color:var(--success);">&#127760;</div>
+      <h3>SEO</h3>
+      <p>Auto meta, JSON-LD, sitemap, robots, audit score, ISR 60s</p>
+    </div>
+  </div>
+  <div class="stats-row" style="margin-top:20px;">
+    <div class="stat-card"><div class="number">22</div><div class="label">Modelos Prisma</div></div>
+    <div class="stat-card"><div class="number">45</div><div class="label">API Routes</div></div>
+    <div class="stat-card"><div class="number">19</div><div class="label">Componentes</div></div>
+    <div class="stat-card"><div class="number">9</div><div class="label">Templates</div></div>
+    <div class="stat-card"><div class="number">7</div><div class="label">Analytics Adapters</div></div>
+  </div>
+</div>
+
+<!-- ===== SLIDE 13: CLOSING ===== -->
+<div class="slide" data-narration="En resumen, Landing System versión 2 ofrece todo lo que Unbounce, Instapage, Leadpages y HubSpot ofrecen por entre 100 y 800 dólares al mes, pero de forma gratuita o con el modelo trae tu propia API key. Además, somos los únicos con un audit de accesibilidad integrado. Todo el código es limpio, tipado con TypeScript, con build limpio de Next.js, listo para producción. El siguiente paso sería implementar el sistema de pagos con Stripe y el modelo Freemium con feature flags. Gracias por su atención. Esto es Landing System versión 2.">
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;">
+    <div class="section-label">Conclusión</div>
+    <h1 class="slide-title" style="font-size:56px; max-width:900px;">
+      Todo lo que cobran <span class="highlight">$1,400/mes</span><br>nosotros lo incluimos <span class="highlight">gratis</span>
+    </h1>
+    <p class="slide-subtitle" style="text-align:center; max-width:600px; margin-top:20px;">
+      8 funcionalidades que superan a los 4 líderes del mercado.<br>
+      Código limpio, TypeScript, build limpio, listo para producción.
+    </p>
+    <div style="margin-top:40px; display:flex; gap:16px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:20px 30px;text-align:center;">
+        <div style="font-size:14px;color:var(--text-muted);text-decoration:line-through;">$1,400+/mes</div>
+        <div style="font-size:32px;font-weight:900;color:var(--success);">$0</div>
+        <div style="font-size:12px;color:var(--text-muted);">Self-hosted</div>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:20px 30px;text-align:center;">
+        <div style="font-size:14px;color:var(--text-muted);">IA con BYOK</div>
+        <div style="font-size:32px;font-weight:900;color:var(--accent);">Tu clave</div>
+        <div style="font-size:12px;color:var(--text-muted);">OpenAI / Anthropic / Google</div>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:20px 30px;text-align:center;">
+        <div style="font-size:14px;color:var(--text-muted);">Innovación única</div>
+        <div style="font-size:32px;font-weight:900;color:var(--primary-light);">A11y</div>
+        <div style="font-size:12px;color:var(--text-muted);">WCAG 2.1 AA Audit</div>
+      </div>
+    </div>
+    <div style="margin-top:50px;">
+      <h2 style="font-size:28px; font-weight:800; color:white;">Landing<span style="color:var(--primary-light);">System</span> <span style="color:var(--text-muted);font-weight:400;">v2.0</span></h2>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:8px;">Next.js 15 &middot; React 19 &middot; TypeScript &middot; Prisma &middot; Tailwind 4</p>
+    </div>
+  </div>
+</div>
+
+</div><!-- /slideshow -->
+
+<!-- Controls -->
+<div id="controls">
+  <button id="btn-prev" title="Diapositiva anterior">&larr; Anterior</button>
+  <span id="slide-counter">1 / 13</span>
+  <button id="btn-next" title="Siguiente diapositiva">Siguiente &rarr;</button>
+  <div style="width:1px;height:24px;background:var(--border);"></div>
+  <button id="btn-play" title="Reproducir con narración">&#9654; Reproducir</button>
+  <button id="btn-pause" title="Pausar" style="display:none;">&#10074;&#10074; Pausar</button>
+  <button id="btn-voice" title="Cambiar voz">&#127908; Voz</button>
+  <button id="btn-mute" title="Silenciar narración">&#128264; Silenciar</button>
+</div>
+
+<div id="narration-indicator" style="opacity:0;">
+  <div class="speaking-dot"></div>
+  <span>Narrando...</span>
+</div>
+
+<script>
+// ===== SLIDESHOW ENGINE =====
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+let currentSlide = 0;
+let isPlaying = false;
+let isMuted = false;
+let synth = window.speechSynthesis;
+let selectedVoice = null;
+let startTime = null;
+let timerInterval = null;
+
+// UI elements
+const counter = document.getElementById('slide-counter');
+const progressBar = document.getElementById('progress-bar');
+const timer = document.getElementById('timer');
+const indicator = document.getElementById('narration-indicator');
+const btnPlay = document.getElementById('btn-play');
+const btnPause = document.getElementById('btn-pause');
+const btnMute = document.getElementById('btn-mute');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+
+// Initialize
+function init() {
+  showSlide(0);
+  loadVoices();
+  synth.onvoiceschanged = loadVoices;
+}
+
+function loadVoices() {
+  const voices = synth.getVoices();
+  // Prefer Microsoft voices in Spanish
+  const preferred = [
+    'Microsoft Helena',
+    'Microsoft Laura',
+    'Microsoft Pablo',
+    'Microsoft Elvira',
+    'Microsoft Sabina',
+    'Paulina',
+    'Monica',
+    'Jorge',
+  ];
+
+  for (const name of preferred) {
+    const v = voices.find(v => v.name.includes(name) && (v.lang.startsWith('es') || v.lang.startsWith('es-')));
+    if (v) { selectedVoice = v; break; }
+  }
+
+  // Fallback: any Spanish voice
+  if (!selectedVoice) {
+    selectedVoice = voices.find(v => v.lang.startsWith('es')) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+  }
+}
+
+function showSlide(index) {
+  slides.forEach((s, i) => {
+    s.classList.toggle('active', i === index);
+  });
+  currentSlide = index;
+  counter.textContent = `${index + 1} / ${totalSlides}`;
+  progressBar.style.width = `${((index + 1) / totalSlides) * 100}%`;
+  btnPrev.disabled = index === 0;
+  btnNext.disabled = index === totalSlides - 1;
+}
+
+function nextSlide() {
+  if (currentSlide < totalSlides - 1) {
+    synth.cancel();
+    showSlide(currentSlide + 1);
+    if (isPlaying) narrate();
+  } else {
+    stopAutoPlay();
+  }
+}
+
+function prevSlide() {
+  if (currentSlide > 0) {
+    synth.cancel();
+    showSlide(currentSlide - 1);
+    if (isPlaying) narrate();
+  }
+}
+
+// ===== NARRATION =====
+function narrate() {
+  if (isMuted) {
+    // Auto-advance after estimated reading time
+    const text = slides[currentSlide].dataset.narration || '';
+    const words = text.split(' ').length;
+    const ms = Math.max(5000, (words / 2.5) * 1000); // ~150 wpm
+    setTimeout(() => { if (isPlaying) nextSlide(); }, ms);
+    return;
+  }
+
+  const text = slides[currentSlide].dataset.narration;
+  if (!text) {
+    setTimeout(() => { if (isPlaying) nextSlide(); }, 3000);
+    return;
+  }
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  if (selectedVoice) utterance.voice = selectedVoice;
+  utterance.rate = 1.05;
+  utterance.pitch = 1.0;
+  utterance.lang = 'es-ES';
+
+  utterance.onstart = () => {
+    indicator.style.opacity = '1';
+  };
+
+  utterance.onend = () => {
+    indicator.style.opacity = '0';
+    if (isPlaying) {
+      setTimeout(() => { if (isPlaying) nextSlide(); }, 1500);
+    }
+  };
+
+  utterance.onerror = () => {
+    indicator.style.opacity = '0';
+    if (isPlaying) setTimeout(() => nextSlide(), 2000);
+  };
+
+  synth.speak(utterance);
+}
+
+function startAutoPlay() {
+  isPlaying = true;
+  btnPlay.style.display = 'none';
+  btnPause.style.display = '';
+  if (!startTime) {
+    startTime = Date.now();
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+  narrate();
+}
+
+function stopAutoPlay() {
+  isPlaying = false;
+  synth.cancel();
+  btnPlay.style.display = '';
+  btnPause.style.display = 'none';
+  indicator.style.opacity = '0';
+}
+
+function updateTimer() {
+  if (!startTime) return;
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+  const secs = String(elapsed % 60).padStart(2, '0');
+  timer.textContent = `${mins}:${secs} / ~10:00`;
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  btnMute.textContent = isMuted ? '🔇 Activar' : '🔊 Silenciar';
+  if (isMuted) {
+    synth.cancel();
+    indicator.style.opacity = '0';
+  }
+}
+
+function cycleVoice() {
+  const voices = synth.getVoices().filter(v => v.lang.startsWith('es'));
+  if (voices.length === 0) return;
+  const currentIndex = voices.indexOf(selectedVoice);
+  const nextIndex = (currentIndex + 1) % voices.length;
+  selectedVoice = voices[nextIndex];
+  // Brief feedback
+  synth.cancel();
+  const test = new SpeechSynthesisUtterance(`Voz: ${selectedVoice.name}`);
+  test.voice = selectedVoice;
+  test.lang = 'es-ES';
+  test.rate = 1.1;
+  synth.speak(test);
+}
+
+// ===== EVENT LISTENERS =====
+btnPrev.addEventListener('click', prevSlide);
+btnNext.addEventListener('click', nextSlide);
+btnPlay.addEventListener('click', startAutoPlay);
+btnPause.addEventListener('click', stopAutoPlay);
+btnMute.addEventListener('click', toggleMute);
+document.getElementById('btn-voice').addEventListener('click', cycleVoice);
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  if (e.key === 'p') { isPlaying ? stopAutoPlay() : startAutoPlay(); }
+  if (e.key === 'm') { toggleMute(); }
+});
+
+// Touch/swipe support
+let touchStartX = 0;
+document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+document.addEventListener('touchend', (e) => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) nextSlide(); else prevSlide();
+  }
+});
+
+init();
+</script>
+</body>
+</html>
